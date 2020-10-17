@@ -1,34 +1,32 @@
-const path = require("path");
-const webpack = require("webpack");
+const path = require('path');
+var HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-  entry: "./src/client/index.js",
-  mode: "development",
+  entry: './src/client/index.js',
+  mode: 'development',
+  output: {
+    filename: 'main.js',
+    path: path.resolve(__dirname, 'dist'),
+  },
+  optimization: {
+  },
+  devServer: {
+    contentBase: path.join(__dirname, 'dist'),
+    compress: true,
+    port: 9000
+  },
   module: {
     rules: [
       {
         test: /\.(js|jsx)$/,
-        exclude: /(node_modules|bower_components)/,
-        loader: "babel-loader",
-        options: { presets: ["@babel/env"] }
-      },
-      {
-        test: /\.css$/,
-        use: ["style-loader", "css-loader"]
+        exclude: /node_modules/,
+        use: {
+          loader: "babel-loader"
+        }
       }
     ]
   },
-  resolve: { extensions: ["*", ".js", ".jsx"] },
-  output: {
-    path: path.resolve(__dirname, "dist/"),
-    publicPath: "/dist/",
-    filename: "bundle.js"
-  },
-  devServer: {
-    contentBase: path.join(__dirname, "public/"),
-    port: 3000,
-    publicPath: "http://localhost:3000/dist/",
-    hotOnly: true
-  },
-  plugins: [new webpack.HotModuleReplacementPlugin()]
+  plugins: [new HtmlWebpackPlugin({
+    template: path.resolve(__dirname, "src/client/index.html"),
+  })]
 };
