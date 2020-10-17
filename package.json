@@ -25,6 +25,7 @@
     "express": "^4.17.1",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
-    "react-router-dom": "^5.2.0"
+    "react-router-dom": "^5.2.0",
+    "webtorrent": "^0.108.6"
   }
 }
