@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "parcel src/client/index.html"
+    "build": "parcel build src/client/index.html",
+    "start": "parcel src/client/index.html",
+    "run.server": "nodemon src/server/main.js"
   },
   "keywords": [],
   "author": "",
@@ -19,13 +21,36 @@
     "html-loader": "^1.3.2",
     "html-webpack-plugin": "^4.5.0",
     "parcel-bundler": "^1.12.4",
+    "parcel-plugin-compress": "^2.0.2",
     "style-loader": "^2.0.0"
   },
   "dependencies": {
     "express": "^4.17.1",
+    "nodemon": "^2.0.5",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-router-dom": "^5.2.0",
     "webtorrent": "^0.108.6"
+  },
+  "compress": {
+    "gzip": {
+      "enabled": true,
+      "numiterations": 15,
+      "blocksplitting": true,
+      "blocksplittinglast": false,
+      "blocksplittingmax": 15,
+      "zlib": false,
+      "zlibLevel": 9,
+      "zlibMemLevel": 9
+    },
+    "brotli": {
+      "enabled": true,
+      "mode": 1,
+      "quality": 11,
+      "lgwin": 24,
+      "enable_context_modeling": false,
+      "lgblock": 24,
+      "nPostfix": 3
+    }
   }
 }
