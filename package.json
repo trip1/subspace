@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack",
-    "start.client": "webpack-dev-server src/client/index.html"
+    "start": "parcel src/client/index.html"
   },
   "keywords": [],
   "author": "",
@@ -17,14 +16,16 @@
     "@babel/preset-react": "^7.12.1",
     "babel-loader": "^8.1.0",
     "css-loader": "^5.0.0",
-    "style-loader": "^2.0.0",
-    "webpack": "^5.1.3",
-    "webpack-cli": "^4.0.0",
-    "webpack-dev-server": "^3.11.0"
+    "html-loader": "^1.3.2",
+    "html-webpack-plugin": "^4.5.0",
+    "parcel-bundler": "^1.12.4",
+    "style-loader": "^2.0.0"
   },
   "dependencies": {
     "express": "^4.17.1",
     "react": "^16.14.0",
-    "react-dom": "^16.14.0"
+    "react-dom": "^16.14.0",
+    "react-router-dom": "^5.2.0",
+    "webtorrent": "^0.108.6"
   }
 }

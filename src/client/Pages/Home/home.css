@@ -1,0 +1,30 @@
+.home {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.left_container {
+    min-width: 240px;
+    padding-right: 16px;
+    max-width: 25%;
+}
+
+.progress_container {
+    width: 100%;
+}
+
+.progress_bar {
+    width: 100%;
+    background-color: lightblue;
+    animation-duration: 0.2s;
+    transition-duration: 0.2s;
+}
+
+.video_player {
+    border: 1px solid lightblue;
+}
+
+.log_container {
+    max-height: 120px;
+    overflow: auto;
+}

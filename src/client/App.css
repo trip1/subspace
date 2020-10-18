@@ -1,4 +1,15 @@
-.App {
-    margin: 1rem;
-    font-family: Arial, Helvetica, sans-serif;
+.margin-m {
+    margin: 8px;
+}
+
+.margin-l {
+    margin: 16px;
+}
+
+.margin-tb-l {
+    margin: 16px 0px;
+}
+
+.full_width {
+    width: 100%;
 }
