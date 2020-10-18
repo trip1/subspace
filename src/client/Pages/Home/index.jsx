@@ -231,7 +231,7 @@ export default class Home extends Component {
     }
 
     torrent_logs(){
-        return this.state.torrent_logs.map(l => (
+        return this.state.torrent_logs.map((l, index) => (
             <p key={`torrent_log_${index}`}>{l}</p>
         ));
     }
