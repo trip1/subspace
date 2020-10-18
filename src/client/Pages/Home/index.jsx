@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import WebTorrent from 'webtorrent';
 import Card from '../../Components/Containers/Card';
 import StatsCard from '../../Components/StatsCard';
+import SimplePeer from 'simple-peer';
 import './home.css';
 
 const torrentId = 'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent'
@@ -10,7 +11,14 @@ export default class Home extends Component {
     constructor(props){
         super();
 
-        const client = new WebTorrent();
+        const client = new WebTorrent({
+            tracker: {
+                rtcConfig: {
+                  ...SimplePeer.config,
+                //   ...rtcConfig
+                }
+              }
+        });
         this.state = {
             client,
             torrent: null,
@@ -52,7 +60,7 @@ export default class Home extends Component {
     }
 
     load_torrent(){
-        let magnet_link = document.getElementById('magnet_link_input').value;
+        let magnet_link = document.getElementById('magnet_link_input').value.trim();
         if(!magnet_link || magnet_link === ""){
             magnet_link = torrentId;
         }
