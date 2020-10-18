@@ -12,9 +12,12 @@ export default class Home extends Component {
     constructor(props){
         super();
 
+        console.log('Using stun servers:', StunServers);
+
         const client = new WebTorrent({
             dht: false,
             tracker: {
+                announceList: [],
                 rtcConfig: {
                     iceServers: [
                         {
