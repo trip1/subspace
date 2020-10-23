@@ -12,24 +12,18 @@ export default class Home extends Component {
     constructor(props){
         super();
 
-        console.log('Using stun servers:', StunServers);
-
         const client = new WebTorrent({
-            dht: false,
             tracker: {
-                announceList: [],
                 rtcConfig: {
                     iceServers: [
                         {
-                            urls: [
-                              'stun:stun.l.google.com:19302',
-                              'stun:global.stun.twilio.com:3478'
-                            ]
+                            urls: StunServers,
                         },
                     ],
                 }
-              }
+            }
         });
+        
         this.state = {
             client,
             torrent: null,
@@ -115,6 +109,8 @@ export default class Home extends Component {
     upload_file(){
         const file = document.getElementById('file_upload').files[0];
         console.log(file);
+        setInterval(this.update_state, 250);
+
         this.state.client.seed(file, torrent => {
             console.log(torrent);
             torrent.on('infoHash', () => this.append_torrent_log('Hash Determined.'));
@@ -122,6 +118,7 @@ export default class Home extends Component {
             torrent.on('ready', () => this.append_torrent_log('Torrent Ready.'));
             torrent.on('warning', (w) => this.append_torrent_log(`WARN: ${w}.`));
             torrent.on('error', (err) => this.append_torrent_log(`ERROR: ${err}.`));
+            torrent.on('wire', (wire) => this.append_torrent_log(`WIRE: ${wire}`));
 
             this.setState({
                 torrent,
@@ -134,7 +131,6 @@ export default class Home extends Component {
             });
 
             file.renderTo('video#player');
-            setInterval(this.update_state, 1000);
         })
     }
 
