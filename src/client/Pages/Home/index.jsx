@@ -22,11 +22,10 @@ export default class Home extends Component {
                     iceServers: [
                         {
                             urls: [
-                                // 'stun:stun.l.google.com:19302',
-                                // 'stun:global.stun.twilio.com:3478'
-                                ...StunServers
+                              'stun:stun.l.google.com:19302',
+                              'stun:global.stun.twilio.com:3478'
                             ]
-                        }
+                        },
                     ],
                 }
               }
