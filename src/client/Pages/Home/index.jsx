@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import WebTorrent from 'webtorrent';
 import Card from '../../Components/Containers/Card';
 import StatsCard from '../../Components/StatsCard';
-// import SimplePeer from 'simple-peer';
+import SimplePeer from 'simple-peer';
 import StunServers from '../../../utils/constants/stun-servers';
 import './home.css';
 
@@ -14,16 +14,13 @@ export default class Home extends Component {
 
         const client = new WebTorrent({
             tracker: {
-                rtcConfig: {
-                    iceServers: [
-                        {
-                            urls: StunServers,
-                        },
-                    ],
-                }
+              rtcConfig: {
+                ...SimplePeer.config,
+                // ...rtcConfig
+              }
             }
-        });
-        
+          })
+
         this.state = {
             client,
             torrent: null,
