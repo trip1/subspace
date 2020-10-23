@@ -109,9 +109,7 @@ export default class Home extends Component {
     upload_file(){
         const file = document.getElementById('file_upload').files[0];
         console.log(file);
-        this.state.client.seed(file, {
-            private: true,    
-        }, torrent => {
+        this.state.client.seed(file, torrent => {
             console.log(torrent);
             torrent.on('infoHash', () => this.append_torrent_log('Hash Determined.'));
             torrent.on('metadata', () => this.append_torrent_log('Metadata Determined.'));
