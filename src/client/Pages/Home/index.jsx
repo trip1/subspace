@@ -172,7 +172,7 @@ export default class Home extends Component {
         if((this.state.is_downloading || this.state.is_loaded) && this.state.show_stats){
             return (
                 <div className="full_width">
-                    <div className="full_width margin-tb-l">
+                    <div className="full_width margin-tb-l hide_overflow">
                         <StatsCard title='Link' data={(this.state.torrent.magnetURI)} />
                     </div>
                     <div className="full_width margin-tb-l">
@@ -265,23 +265,33 @@ export default class Home extends Component {
                     {this.download_torrent_fields()}
                     {this.upload_torrent_fields()}
                     {this.show_stat_cards()}
-                    <div>
+                </div>
+                <div className="video_container">
+                    <video className="video_player" crossOrigin="anonymous" width="600px" height="200px" id='player'></video>
+                    {this.render_progress()}
+                </div>
+                <div className="right_container">
+                    <div className="margin-tb-l">
                         <Card className="log_container" id="client_logs">
-                            <h5>Client Logs</h5>
-                            {this.client_logs()}
+                            <div style={{
+                                overflow: 'hidden',
+                            }}>
+                                <h4>Client Logs</h4>
+                                {this.client_logs()}
+                            </div>
                         </Card>
                     </div>
-                    <div>
+                    <div className="margin-tb-l"> 
                         <Card className="log_container" id="torrent_logs">
-                            <h5>Torrent Logs</h5>
-                            {this.torrent_logs()}
+                            <div style={{
+                                overflow: 'hidden',
+                            }}>
+                                <h4>Torrent Logs</h4>
+                                {this.torrent_logs()}
+                            </div>
                         </Card>
                     </div>
                 </div>
-                <Card className="video_container">
-                    <video className="video_player" crossOrigin="anonymous" width="600px" height="200px" id='player'></video>
-                    {this.render_progress()}
-                </Card>
             </div>
         )
     }

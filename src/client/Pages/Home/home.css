@@ -9,6 +9,12 @@
     max-width: 25%;
 }
 
+.right_container {
+    min-width: 240px;
+    padding-left: 16px;
+    max-width: 25%;
+}
+
 .progress_container {
     width: 100%;
 }
@@ -22,6 +28,8 @@
 
 .video_player {
     border: 1px solid lightblue;
+    max-width: 600px;
+    width: auto;
 }
 
 .log_container {
