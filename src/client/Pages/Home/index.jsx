@@ -76,13 +76,18 @@ export default class Home extends Component {
             magnet_link = torrentId;
         }
 
+        setInterval(this.update_state, 250);
+        this.append_torrent_log('Adding torrent');
+
         const torrent = this.state.client.add(magnet_link);
         
         torrent.on('metadata', () => {
             console.log('Meta', torrent);
+            this.append_torrent_log('Got metadata', torrent);
         });
 
         torrent.on('ready', () => {
+            this.append_torrent_log('Torrent Ready!');
             const file = torrent.files.find(function (file) {
                 return file.name.endsWith('.mp4');
             });
@@ -96,9 +101,10 @@ export default class Home extends Component {
             file.renderTo('video#player');
         });
 
-        setInterval(this.update_state, 1000);
+        
 
         torrent.on('done', () => {
+            this.append_torrent_log('Torrent done');
             this.setState({
                 is_loaded: true,
                 is_downloading: false,
