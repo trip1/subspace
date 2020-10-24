@@ -3,7 +3,7 @@ import WebTorrent from 'webtorrent';
 import Card from '../../Components/Containers/Card';
 import StatsCard from '../../Components/StatsCard';
 import SimplePeer from 'simple-peer';
-import StunServers from '../../../utils/constants/stun-servers';
+import randstring from 'randomstring';
 import './home.css';
 
 const torrentId = 'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent'
@@ -12,17 +12,14 @@ export default class Home extends Component {
     constructor(props){
         super();
 
-        // const client = new WebTorrent({
-        //     tracker: {
-        //       rtcConfig: {
-        //         ...SimplePeer.config,
-        //         // ...rtcConfig
-        //       }
-        //     }
-        // });
-
         this.state = {
-            client: {},
+            client: new WebTorrent({
+                tracker: {
+                    rtcConfig: {
+                        ...SimplePeer.config,
+                    }
+                }
+            }),
             torrent: null,
             is_downloading: false,
             is_loaded: false,
@@ -33,9 +30,11 @@ export default class Home extends Component {
             torrent_logs: [],
         }
 
+        this.new_client = this.new_client.bind(this);
         this.client_logs = this.client_logs.bind(this);
-        this.torrent_logs = this.torrent_logs.bind(this);
+        this.handle_wire = this.handle_wire.bind(this);
         this.upload_file = this.upload_file.bind(this);
+        this.torrent_logs = this.torrent_logs.bind(this);
         this.load_torrent = this.load_torrent.bind(this);
         this.update_state = this.update_state.bind(this);
         this.render_progress = this.render_progress.bind(this);
@@ -47,35 +46,25 @@ export default class Home extends Component {
         this.download_torrent_fields = this.download_torrent_fields.bind(this);
     }
 
-    get_client(cb){
+    new_client(){
         let client = new WebTorrent({
             tracker: {
                 rtcConfig: {
-                ...SimplePeer.config,
-                // ...rtcConfig
+                    ...SimplePeer.config,
                 }
             }
         })
 
         client.on('warning', (warn) => this.append_client_log(`WARN: ${warn}`));
         client.on('error', (err) => this.append_client_log(`ERROR: ${err}`));
+        console.log('Client ready');
 
-        cb(client);
+        return client;
     }
 
     componentDidMount(){
-        // this.load_torrent();
-        // this.state.client.on('torrent', l => {
-        //     this.setState({
-        //         client_logs: this.state.client_logs.concat([`${l}`]),
-        //     });
-        // });
-
-        // this.state.client.on('error', l => {
-        //     this.setState({
-        //         client_logs: this.state.client_logs.concat([`${l}`]),
-        //     });
-        // })
+        this.state.client.on('warn', (w) => this.append_client_log(`WARN: ${w}`));
+        this.state.client.on('error', (e) => this.append_client_log(`ERROR: ${e}`));
     }
 
     load_torrent(){
@@ -87,35 +76,33 @@ export default class Home extends Component {
         setInterval(this.update_state, 250);
         this.append_torrent_log('Adding torrent');
 
-        this.get_client(client => {
-            const torrent = client.add(magnet_link);
+        const torrent = this.state.client.add(magnet_link);
 
-            torrent.on('metadata', () => {
-                console.log('Meta', torrent);
-                this.append_torrent_log('Got metadata', torrent);
-            });
-    
-            torrent.on('ready', () => {
-                this.append_torrent_log('Torrent Ready!');
-                const file = torrent.files.find(function (file) {
-                    return file.name.endsWith('.mp4');
-                });
-    
-                this.setState({
-                    torrent,
-                    is_downloading: true,
-                })
-        
-                // file.appendTo('body');
-                file.renderTo('video#player');
+        torrent.on('metadata', () => {
+            console.log('Meta', torrent);
+            this.append_torrent_log('Got metadata', torrent);
+        });
+
+        torrent.on('ready', () => {
+            this.append_torrent_log('Torrent Ready!');
+            const file = torrent.files.find(function (file) {
+                return file.name.endsWith('.mp4');
             });
 
-            torrent.on('done', () => {
-                this.append_torrent_log('Torrent done');
-                this.setState({
-                    is_loaded: true,
-                    is_downloading: false,
-                })
+            this.setState({
+                torrent,
+                is_downloading: true,
+            })
+    
+            // file.appendTo('body');
+            file.renderTo('video#player');
+        });
+
+        torrent.on('done', () => {
+            this.append_torrent_log('Torrent done');
+            this.setState({
+                is_loaded: true,
+                is_downloading: false,
             })
         });
     }
@@ -125,29 +112,58 @@ export default class Home extends Component {
         console.log(file);
         setInterval(this.update_state, 250);
 
-        this.get_client(client => {
-            client.seed(file, torrent => {
-                console.log(torrent);
-                torrent.on('infoHash', () => this.append_torrent_log('Hash Determined.'));
-                torrent.on('metadata', () => this.append_torrent_log('Metadata Determined.'));
-                torrent.on('ready', () => this.append_torrent_log('Torrent Ready.'));
-                torrent.on('warning', (w) => this.append_torrent_log(`WARN: ${w}.`));
-                torrent.on('error', (err) => this.append_torrent_log(`ERROR: ${err}.`));
-                torrent.on('wire', (wire) => this.append_torrent_log(`WIRE: ${wire}`));
-    
-                this.setState({
-                    torrent,
-                    is_loaded: true,
-                    is_downloading: false,
-                });
-    
-                const file = torrent.files.find(function (file) {
-                    return file.name.endsWith('.mp4');
-                });
-    
+        this.state.client.seed(file, {
+            name: randstring.generate() + ".mp4",
+        }, torrent => {
+            console.log(torrent);
+            torrent.on('infoHash', () => this.append_torrent_log('Hash Determined.'));
+            torrent.on('metadata', () => this.append_torrent_log('Metadata Determined.'));
+            torrent.on('ready', () => this.append_torrent_log('Torrent Ready.'));
+            torrent.on('warning', (w) => this.append_torrent_log(`WARN: ${w}.`));
+            torrent.on('error', (err) => this.append_torrent_log(`ERROR: ${err}.`));
+            torrent.on('wire', this.handle_wire);
+
+            this.setState({
+                torrent,
+                is_loaded: true,
+                is_downloading: false,
+            });
+
+            console.log(torrent.files)
+            const file = torrent.files.find(function (file) {
+                return file.name.endsWith('.mp4');
+            });
+
+            if(file){
                 file.renderTo('video#player');
-            })
+            }
         })
+    }
+
+    handle_wire(wire){
+        wire.on('handshake', (infoHash, peerId, extensions) => {
+            console.log('Handshake from', peerId);
+            console.log(extensions.dht) // supports DHT (BEP-0005)
+            console.log(extensions.extended) // supports extension protocol (BEP-0010)
+        });
+
+        wire.on('choke', () => {
+            console.log('Peer is choking us');
+        });
+
+        wire.on('unchoke', () => {
+            console.log('Peer is no longer choking us');
+        });
+
+        wire.on('interested', () => {
+            // peer is now interested
+            console.log('Peer is interested');
+        });
+
+        wire.on('uninterested', () => {
+            // peer is no longer interested
+            console.log('Peer is uninterested');
+        });
     }
 
     update_state(){
