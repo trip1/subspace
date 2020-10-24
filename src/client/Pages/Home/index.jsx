@@ -12,17 +12,17 @@ export default class Home extends Component {
     constructor(props){
         super();
 
-        const client = new WebTorrent({
-            tracker: {
-              rtcConfig: {
-                ...SimplePeer.config,
-                // ...rtcConfig
-              }
-            }
-          })
+        // const client = new WebTorrent({
+        //     tracker: {
+        //       rtcConfig: {
+        //         ...SimplePeer.config,
+        //         // ...rtcConfig
+        //       }
+        //     }
+        // });
 
         this.state = {
-            client,
+            client: {},
             torrent: null,
             is_downloading: false,
             is_loaded: false,
@@ -40,25 +40,42 @@ export default class Home extends Component {
         this.update_state = this.update_state.bind(this);
         this.render_progress = this.render_progress.bind(this);
         this.show_stat_cards = this.show_stat_cards.bind(this);
+        this.append_client_log = this.append_client_log.bind(this);
         this.append_torrent_log = this.append_torrent_log.bind(this);
         this.torrent_downloading = this.torrent_downloading.bind(this);
         this.upload_torrent_fields = this.upload_torrent_fields.bind(this);
         this.download_torrent_fields = this.download_torrent_fields.bind(this);
     }
 
+    get_client(cb){
+        let client = new WebTorrent({
+            tracker: {
+                rtcConfig: {
+                ...SimplePeer.config,
+                // ...rtcConfig
+                }
+            }
+        })
+
+        client.on('warning', (warn) => this.append_client_log(`WARN: ${warn}`));
+        client.on('error', (err) => this.append_client_log(`ERROR: ${err}`));
+
+        cb(client);
+    }
+
     componentDidMount(){
         // this.load_torrent();
-        this.state.client.on('torrent', l => {
-            this.setState({
-                client_logs: this.state.client_logs.concat([`${l}`]),
-            });
-        });
+        // this.state.client.on('torrent', l => {
+        //     this.setState({
+        //         client_logs: this.state.client_logs.concat([`${l}`]),
+        //     });
+        // });
 
-        this.state.client.on('error', l => {
-            this.setState({
-                client_logs: this.state.client_logs.concat([`${l}`]),
-            });
-        })
+        // this.state.client.on('error', l => {
+        //     this.setState({
+        //         client_logs: this.state.client_logs.concat([`${l}`]),
+        //     });
+        // })
     }
 
     load_torrent(){
@@ -70,37 +87,37 @@ export default class Home extends Component {
         setInterval(this.update_state, 250);
         this.append_torrent_log('Adding torrent');
 
-        const torrent = this.state.client.add(magnet_link);
-        
-        torrent.on('metadata', () => {
-            console.log('Meta', torrent);
-            this.append_torrent_log('Got metadata', torrent);
-        });
+        this.get_client(client => {
+            const torrent = client.add(magnet_link);
 
-        torrent.on('ready', () => {
-            this.append_torrent_log('Torrent Ready!');
-            const file = torrent.files.find(function (file) {
-                return file.name.endsWith('.mp4');
+            torrent.on('metadata', () => {
+                console.log('Meta', torrent);
+                this.append_torrent_log('Got metadata', torrent);
+            });
+    
+            torrent.on('ready', () => {
+                this.append_torrent_log('Torrent Ready!');
+                const file = torrent.files.find(function (file) {
+                    return file.name.endsWith('.mp4');
+                });
+    
+                this.setState({
+                    torrent,
+                    is_downloading: true,
+                })
+        
+                // file.appendTo('body');
+                file.renderTo('video#player');
             });
 
-            this.setState({
-                torrent,
-                is_downloading: true,
+            torrent.on('done', () => {
+                this.append_torrent_log('Torrent done');
+                this.setState({
+                    is_loaded: true,
+                    is_downloading: false,
+                })
             })
-    
-            // file.appendTo('body');
-            file.renderTo('video#player');
         });
-
-        
-
-        torrent.on('done', () => {
-            this.append_torrent_log('Torrent done');
-            this.setState({
-                is_loaded: true,
-                is_downloading: false,
-            })
-        })
     }
 
     upload_file(){
@@ -108,34 +125,38 @@ export default class Home extends Component {
         console.log(file);
         setInterval(this.update_state, 250);
 
-        this.state.client.seed(file, torrent => {
-            console.log(torrent);
-            torrent.on('infoHash', () => this.append_torrent_log('Hash Determined.'));
-            torrent.on('metadata', () => this.append_torrent_log('Metadata Determined.'));
-            torrent.on('ready', () => this.append_torrent_log('Torrent Ready.'));
-            torrent.on('warning', (w) => this.append_torrent_log(`WARN: ${w}.`));
-            torrent.on('error', (err) => this.append_torrent_log(`ERROR: ${err}.`));
-            torrent.on('wire', (wire) => this.append_torrent_log(`WIRE: ${wire}`));
-
-            this.setState({
-                torrent,
-                is_loaded: true,
-                is_downloading: false,
-            });
-
-            const file = torrent.files.find(function (file) {
-                return file.name.endsWith('.mp4');
-            });
-
-            file.renderTo('video#player');
+        this.get_client(client => {
+            client.seed(file, torrent => {
+                console.log(torrent);
+                torrent.on('infoHash', () => this.append_torrent_log('Hash Determined.'));
+                torrent.on('metadata', () => this.append_torrent_log('Metadata Determined.'));
+                torrent.on('ready', () => this.append_torrent_log('Torrent Ready.'));
+                torrent.on('warning', (w) => this.append_torrent_log(`WARN: ${w}.`));
+                torrent.on('error', (err) => this.append_torrent_log(`ERROR: ${err}.`));
+                torrent.on('wire', (wire) => this.append_torrent_log(`WIRE: ${wire}`));
+    
+                this.setState({
+                    torrent,
+                    is_loaded: true,
+                    is_downloading: false,
+                });
+    
+                const file = torrent.files.find(function (file) {
+                    return file.name.endsWith('.mp4');
+                });
+    
+                file.renderTo('video#player');
+            })
         })
     }
 
     update_state(){
-        this.setState({
-            download_progress: this.state.torrent.progress,
-            upload_count: this.state.torrent.uploaded,
-        })
+        if(this.state.torrent && this.state.torrent.progress){
+            this.setState({
+                download_progress: this.state.torrent.progress,
+                upload_count: this.state.torrent.uploaded,
+            });
+        }
     }
 
     torrent_downloading(bytes, torrent){
@@ -246,6 +267,11 @@ export default class Home extends Component {
     append_torrent_log(log){
         console.log(log);
         this.setState({torrent_logs: this.state.torrent_logs.concat([log])});
+    }
+
+    append_client_log(log){
+        console.log(log);
+        this.setState({client_logs: this.state.client_logs.concat([log])});
     }
 
     torrent_logs(){
