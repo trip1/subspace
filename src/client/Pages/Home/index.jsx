@@ -5,6 +5,7 @@ import StatsCard from '../../Components/StatsCard';
 import SimplePeer from 'simple-peer';
 import randstring from 'randomstring';
 import './home.css';
+import socketapi from '../../api/socket';
 
 const torrentId = 'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent'
 
@@ -28,8 +29,11 @@ export default class Home extends Component {
             show_stats: true,
             client_logs: [],
             torrent_logs: [],
+            wire_logs: [],
+            server_torrents: [],
         }
 
+        this.wire_logs = this.wire_logs.bind(this);
         this.new_client = this.new_client.bind(this);
         this.client_logs = this.client_logs.bind(this);
         this.handle_wire = this.handle_wire.bind(this);
@@ -37,12 +41,16 @@ export default class Home extends Component {
         this.torrent_logs = this.torrent_logs.bind(this);
         this.load_torrent = this.load_torrent.bind(this);
         this.update_state = this.update_state.bind(this);
+        this.handle_socket = this.handle_socket.bind(this);
+        this.append_wire_log = this.append_wire_log.bind(this);
         this.render_progress = this.render_progress.bind(this);
         this.show_stat_cards = this.show_stat_cards.bind(this);
+        this.found_new_torrent = this.found_new_torrent.bind(this);
         this.append_client_log = this.append_client_log.bind(this);
         this.append_torrent_log = this.append_torrent_log.bind(this);
         this.torrent_downloading = this.torrent_downloading.bind(this);
         this.upload_torrent_fields = this.upload_torrent_fields.bind(this);
+        this.render_server_torrents = this.render_server_torrents.bind(this);
         this.download_torrent_fields = this.download_torrent_fields.bind(this);
     }
 
@@ -63,12 +71,53 @@ export default class Home extends Component {
     }
 
     componentDidMount(){
+        socketapi.join_lobby("waiting_room", this.handle_socket);
+
         this.state.client.on('warn', (w) => this.append_client_log(`WARN: ${w}`));
         this.state.client.on('error', (e) => this.append_client_log(`ERROR: ${e}`));
     }
 
-    load_torrent(){
-        let magnet_link = document.getElementById('magnet_link_input').value.trim();
+    handle_socket(msg){
+        console.log(msg);
+        switch(msg.type){
+            case "torrent_load":
+                this.found_new_torrent(msg);
+                break;
+            default:
+                console.log("Socket event not handled");
+        }
+    }
+
+    found_new_torrent(data){
+        this.setState({
+            server_torrents: [data.payload].concat(this.state.server_torrents),
+        });
+    }
+
+    render_server_torrents(){
+        if(this.state.server_torrents.length > 0){
+            const t = [];
+            this.state.server_torrents.forEach((tor, index) => {
+                t.push(<div onClick={() => this.load_torrent(tor)} key={`server_torrent_${index}`}>{tor.slice(21, 31)}</div>);
+            });
+
+            return (
+                <Card>
+                    {t}
+                </Card>
+            )
+        }
+
+        return null;
+    }
+
+    load_torrent(magnet_link=null){
+        // If nothing is passed in, check the input field
+        if(!magnet_link){
+            magnet_link = document.getElementById('magnet_link_input').value.trim();
+        }
+
+        // If nothing is in input field, load default test
         if(!magnet_link || magnet_link === ""){
             magnet_link = torrentId;
         }
@@ -77,11 +126,6 @@ export default class Home extends Component {
         this.append_torrent_log('Adding torrent');
 
         const torrent = this.state.client.add(magnet_link);
-
-        torrent.on('metadata', () => {
-            console.log('Meta', torrent);
-            this.append_torrent_log('Got metadata', torrent);
-        });
 
         torrent.on('ready', () => {
             this.append_torrent_log('Torrent Ready!');
@@ -105,6 +149,13 @@ export default class Home extends Component {
                 is_downloading: false,
             })
         });
+
+        torrent.on('warning', (w) => this.append_torrent_log(`WARN: ${w}.`));
+        torrent.on('error', (err) => this.append_torrent_log(`ERROR: ${err}.`));
+        torrent.on('infoHash', () => this.append_torrent_log('Hash Determined.'));
+        torrent.on('metadata', () => this.append_torrent_log('Metadata Determined.'));
+        torrent.on('noPeers', () => this.append_torrent_log('No Peers'));
+        torrent.on('wire', this.handle_wire);
     }
 
     upload_file(){
@@ -114,6 +165,7 @@ export default class Home extends Component {
 
         this.state.client.seed(file, {
             name: randstring.generate() + ".mp4",
+            announce: ['wss://tracker.openwebtorrent.com', 'wss://tracker.btorrent.xyz'],
         }, torrent => {
             console.log(torrent);
             torrent.on('infoHash', () => this.append_torrent_log('Hash Determined.'));
@@ -128,6 +180,8 @@ export default class Home extends Component {
                 is_loaded: true,
                 is_downloading: false,
             });
+
+            socketapi.submit_torrent(torrent.magnetURI);
 
             console.log(torrent.files)
             const file = torrent.files.find(function (file) {
@@ -149,20 +203,24 @@ export default class Home extends Component {
 
         wire.on('choke', () => {
             console.log('Peer is choking us');
+            this.append_wire_log('Peer is choking us');
         });
 
         wire.on('unchoke', () => {
             console.log('Peer is no longer choking us');
+            this.append_wire_log('Peer is no longer choking us');
         });
 
         wire.on('interested', () => {
             // peer is now interested
             console.log('Peer is interested');
+            this.append_wire_log('Peer is interested');
         });
 
         wire.on('uninterested', () => {
             // peer is no longer interested
             console.log('Peer is uninterested');
+            this.append_wire_log('Peer is uninterested');
         });
     }
 
@@ -206,7 +264,7 @@ export default class Home extends Component {
             return (
                 <div className="full_width">
                     <div className="full_width margin-tb-l hide_overflow">
-                        <StatsCard title='Link' data={(this.state.torrent.magnetURI)} />
+                        <StatsCard title='Link' data={(this.state.torrent.name)} />
                     </div>
                     <div className="full_width margin-tb-l">
                         <StatsCard title='Ratio' data={(this.state.torrent.ratio).toFixed(2)} />
@@ -234,6 +292,9 @@ export default class Home extends Component {
         if(!this.state.is_downloading && !this.state.is_loaded){
             return (
                 <Card>
+                    <div>
+                        {this.render_server_torrents()}
+                    </div>
                     <div className="margin-l">
                         <div>
                             <label htmlFor="magnet_link_input">Magnet Link</label>
@@ -274,6 +335,11 @@ export default class Home extends Component {
         return null;
     }
 
+    append_client_log(log){
+        console.log(log);
+        this.setState({client_logs: this.state.client_logs.concat([log])});
+    }
+
     client_logs(){
         return this.state.client_logs.map((l, index) => (
             <p key={`client_log_${index}`}>{l}</p>
@@ -285,14 +351,20 @@ export default class Home extends Component {
         this.setState({torrent_logs: this.state.torrent_logs.concat([log])});
     }
 
-    append_client_log(log){
-        console.log(log);
-        this.setState({client_logs: this.state.client_logs.concat([log])});
-    }
-
     torrent_logs(){
         return this.state.torrent_logs.map((l, index) => (
             <p key={`torrent_log_${index}`}>{l}</p>
+        ));
+    }
+
+    append_wire_log(log){
+        console.log(log);
+        this.setState({wire_logs: this.state.wire_logs.concat([log])});
+    }
+
+    wire_logs(){
+        return this.state.wire_logs.map((l, index) => (
+            <p key={`wire_log_${index}`}>{l}</p>
         ));
     }
 
@@ -326,6 +398,16 @@ export default class Home extends Component {
                             }}>
                                 <h4>Torrent Logs</h4>
                                 {this.torrent_logs()}
+                            </div>
+                        </Card>
+                    </div>
+                    <div className="margin-tb-l"> 
+                        <Card className="log_container" id="wire_logs">
+                            <div style={{
+                                overflow: 'hidden',
+                            }}>
+                                <h4>Wire Logs</h4>
+                                {this.wire_logs()}
                             </div>
                         </Card>
                     </div>
