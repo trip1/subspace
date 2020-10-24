@@ -6,7 +6,9 @@ if(serverAddr.includes('nolife')){
     serverPort = "";
 }
 
-const io = socketClient(serverAddr+serverPort);
+const io = socketClient(serverAddr+serverPort, {
+    path: '/wss',
+});
 
 io.on('connect', () => {
     console.log('Connection established');

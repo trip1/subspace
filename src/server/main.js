@@ -15,6 +15,7 @@ app.use(express.static('dist'));
  */
 const Server = require('socket.io');
 const io = new Server(http, {
+    path: '/wss',
     origins: '*:*',
 });
 
