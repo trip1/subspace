@@ -304,7 +304,7 @@ export default class Home extends Component {
                         </div>
                     </div>
                     <div className="margin-l">
-                        <button onClick={this.load_torrent}>Load Torrent</button>
+                        <button onClick={() => this.load_torrent()}>Load Torrent</button>
                     </div>
                 </Card>
             )
