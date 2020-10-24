@@ -1,6 +1,10 @@
 import socketClient from 'socket.io-client';
 const serverAddr = window.location.hostname;
-const serverPort = ":8080";
+let serverPort = ":8080";
+if(serverAddr.includes('nolife')){
+    // Use default port in production
+    serverPort = "";
+}
 
 const io = socketClient(serverAddr+serverPort);
 
