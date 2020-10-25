@@ -1,6 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const TerserPlugin = require('terser-webpack-plugin'); 
+// const TerserPlugin = require('terser-webpack-plugin'); 
 const CompressionPlugin = require("compression-webpack-plugin");
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 require("@babel/polyfill");
@@ -18,7 +18,7 @@ const config = {
   },
   optimization: {
     minimize: true,
-    minimizer: [new TerserPlugin()],
+    // minimizer: [new TerserPlugin()],
   },
   plugins: [
     new CleanWebpackPlugin(),
