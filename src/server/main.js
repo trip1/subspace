@@ -70,7 +70,7 @@ const trackerserver = new Tracker({
     stats: true, // enable web-based statistics? [default=true]
 });
 
-trackerserver.listen(TRACKERPORT, 'nolife.best', () => {
+trackerserver.listen(TRACKERPORT, 'tracker.nolife.best', () => {
     console.log('Tracker server startup complete', TRACKERPORT);
 });
 
