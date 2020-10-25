@@ -4,7 +4,7 @@ const http = require('http').createServer(app);
 const DHT = require('bittorrent-dht');
 const Webtorrent = require('webtorrent-hybrid');
 
-const PORT = 8080;
+const PORT = 80;
 const DHTPORT = 20000;
 
 const links = {};
