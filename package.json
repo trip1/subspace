@@ -25,6 +25,7 @@
     "style-loader": "^2.0.0"
   },
   "dependencies": {
+    "bittorrent-tracker": "^9.15.0",
     "express": "^4.17.1",
     "milligram": "^1.4.1",
     "nodemon": "^2.0.5",
