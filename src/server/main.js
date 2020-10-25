@@ -18,14 +18,15 @@ app.use(express.static('dist'));
 const Server = require('socket.io');
 const io = new Server(http, {
     path: '/wss',
-    origins: '*:*',
 });
 
 io.on('connection', (socket) => {
     console.log('A user connected', socket.conn.id);
     io.emit('new_user', "User connected:", socket.id);
-    socket.send('init', links);
-    
+    socket.send({
+        type: 'init',
+        payload: links,
+    });
 
     socket.on('torrent_load', (data) => {
         console.log('room_msg:', data);

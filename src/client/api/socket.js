@@ -1,6 +1,7 @@
 import socketClient from 'socket.io-client';
 const serverAddr = window.location.hostname;
 let serverPort = ":8080";
+
 if(serverAddr.includes('nolife')){
     // Use default port in production
     serverPort = "";
@@ -8,6 +9,7 @@ if(serverAddr.includes('nolife')){
 
 const io = socketClient(serverAddr+serverPort, {
     path: '/wss',
+    autoConnect: false,
 });
 
 io.on('connect', () => {
@@ -34,12 +36,17 @@ function submit_torrent(magnetURI=''){
 function join_lobby(lobby_name="waiting_room", cb){
     console.log('Joining lobby', lobby_name);
     io.emit("subscribe", lobby_name);
+}
 
+function init_socket(cb){
+    io.connect();
+    io.on('message', cb);
     io.on('room_msg', cb);
 }
 
 export default {
-    submit_torrent,
     join_lobby,
+    init_socket,
+    submit_torrent,
 }
 

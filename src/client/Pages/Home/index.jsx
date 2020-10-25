@@ -71,6 +71,7 @@ export default class Home extends Component {
     }
 
     componentDidMount(){
+        socketapi.init_socket(this.handle_socket);
         socketapi.join_lobby("waiting_room", this.handle_socket);
 
         this.state.client.on('warn', (w) => this.append_client_log(`WARN: ${w}`));
@@ -80,17 +81,38 @@ export default class Home extends Component {
     handle_socket(msg){
         console.log(msg);
         switch(msg.type){
+            case "init":
+                const links = [];
+                for(let i in msg.payload){
+                    links.push(...msg.payload[i]);
+                }
+
+                console.log('links', links);
+                this.found_new_torrent({payload: links});
+                break;
             case "torrent_load":
                 this.found_new_torrent(msg);
                 break;
             default:
-                console.log("Socket event not handled");
+                console.log("Socket event not handled", msg);
         }
     }
 
     found_new_torrent(data){
+        console.log('Found new torrents', typeof data.payload, data.payload);
+        let t = [];
+
+        switch(typeof data.payload){
+            case 'object':
+                t = data.payload;
+                break;
+            case 'string':
+                t = [data.payload];
+                break;
+        }
+
         this.setState({
-            server_torrents: [data.payload].concat(this.state.server_torrents),
+            server_torrents: t.concat(this.state.server_torrents),
         });
     }
 
