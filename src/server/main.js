@@ -11,7 +11,7 @@ const links = {};
 /**
  * Express server setup
  */
-app.use(express.static('dist'));
+app.use(express.static('prod'));
 
 
 /**

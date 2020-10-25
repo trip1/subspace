@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Card from '../Containers/Card';
+import Card from '../Containers/Card/index.jsx';
 
 export default class StatsCard extends Component {
     render() {
