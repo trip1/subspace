@@ -136,11 +136,14 @@ export default class Home extends Component {
         console.log('Found new torrents', typeof data.payload, data.payload);
         const existing = [].concat(this.state.server_torrents);
 
-        if(Buffer.isBuffer(data.payload)){
+        if(Buffer.isBuffer(data.payload) || ArrayBuffer.isView(data.payload) || data.payload.byteLength > 0){
             existing.push(Buffer.from(data.payload));
         } else {
             data.payload.forEach(d => {
-                existing.push(Buffer.from(d));
+                console.log(d);
+                d.forEach(b => {
+                    existing.push(Buffer.from(b));
+                })
             });
         }
 
@@ -188,8 +191,8 @@ export default class Home extends Component {
 
         setInterval(this.update_state, 250);
         this.append_torrent_log('Adding torrent');
+        console.log('Loading file', magnet_link);
 
-        console.log('Adding torrent', magnet_link);
         const torrent = this.state.client.add(magnet_link);
         // this.append_torrent_log(magnet_link);
 
