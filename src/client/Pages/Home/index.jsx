@@ -8,7 +8,23 @@ import socketapi from '../../api/socket';
 import './home.css';
 
 const torrentId = 'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent'
-const announceList = ['wss://tracker.openwebtorrent.com', 'wss://tracker.btorrent.xyz'];
+const announceList = [
+    'wss://tracker.openwebtorrent.com',
+    'wss://tracker.btorrent.xyz',
+    'wss://video.blender.org:443/tracker/socket',
+    'wss://tube.privacytools.io:443/tracker/socket',
+    'wss://tracker.sloppyta.co:443/announce',
+    'wss://tracker.lab.vvc.niif.hu:443/announce',
+    'wss://tracker.files.fm:7073/announce',
+    'wss://peertube.cpy.re:443/tracker/socket',
+    'wss://open.tube:443/tracker/socket',
+    'wss://hub.bugout.link:443/announce',
+    'ws://tracker.sloppyta.co:80/announce',
+    'ws://tracker.lab.vvc.niif.hu:80/announce',
+    'ws://tracker.files.fm:7072/announce',
+    'ws://tracker.btsync.cf:6969/announce',
+    'ws://hub.bugout.link:80/announce',
+];
 
 export default class Home extends Component {
     constructor(props){
