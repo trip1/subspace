@@ -4,9 +4,22 @@ const http = require('http').createServer(app);
 // const DHT = require('bittorrent-dht');
 const Webtorrent = require('webtorrent-hybrid');
 const Server = require('socket.io');
+const fs = require('fs');
 
 const PORT = 8080;
 const links = {};
+const announceList = [
+    'wss://tracker.openwebtorrent.com',
+    'wss://tracker.btorrent.xyz',
+    'wss://video.blender.org:443/tracker/socket',
+    'wss://tube.privacytools.io:443/tracker/socket',
+    'wss://tracker.sloppyta.co:443/announce',
+    'wss://tracker.lab.vvc.niif.hu:443/announce',
+    'wss://tracker.files.fm:7073/announce',
+    'wss://peertube.cpy.re:443/tracker/socket',
+    'wss://open.tube:443/tracker/socket',
+    'wss://hub.bugout.link:443/announce',
+];
 
 /**
  * Setup Torrent server
@@ -45,7 +58,7 @@ io.on('connection', (socket) => {
     socket.on('torrent_load', (data) => {
         console.log('room_msg:', data);
         links[socket.conn.id] = data.payload;
-        torrent_server.add(Buffer.from(data.payload[0].torrentFile), torrent_added);
+        torrent_server.add(data.payload[0].magnetURI, torrent_added);
 
         io.to(data.room).emit("room_msg", data);
     });
@@ -57,11 +70,14 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', (reason) => {
         console.log("Socket disconnected", reason);
-        console.log(torrent_server.torrents);
 
         if(links[socket.conn.id]){
-            torrent_server.remove(links[socket.conn.id][0].magnetURI);
+            const id = links[socket.conn.id][0].magnetURI;
+
+            remove_torrent_data(id)
+            
             delete links[socket.conn.id];
+            console.log(torrent_server.torrents);
         }
     });
 });
@@ -84,6 +100,23 @@ function torrent_added(torrent){
     torrent.on('done', () => {
         console.log('Torrent download complete');
     });
+}
+
+function remove_torrent_data(torrentID){
+    try{
+        const t = torrent_server.get(torrentID);
+        if(t){
+            fs.unlink(t.path, (err) => {
+                if(err){
+                    console.error('Failed to remove file', err);
+                }
+            });
+        }
+
+        torrent_server.remove(torrentID);
+    } catch(err){
+        console.error("Failed to remove torrent", err);
+    }
 }
 
 // function addDhtNode(node){
