@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import WebTorrent from 'webtorrent-hybrid';
+import WebTorrent from 'webtorrent';
 import Card from '../../Components/Containers/Card';
 import StatsCard from '../../Components/StatsCard';
 import SimplePeer from 'simple-peer';
@@ -206,6 +206,7 @@ export default class Home extends Component {
 
         this.state.client.seed(file, {
             name: randstring.generate() + ".mp4",
+            announce: announceList,
         }, torrent => {
             console.log(torrent);
             torrent.on('infoHash', () => this.append_torrent_log('Hash Determined.'));
