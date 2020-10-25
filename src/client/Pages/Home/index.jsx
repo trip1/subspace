@@ -149,9 +149,7 @@ export default class Home extends Component {
         setInterval(this.update_state, 250);
         this.append_torrent_log('Adding torrent');
 
-        const torrent = this.state.client.add(magnet_link, {
-            announce: announceList,
-        });
+        const torrent = this.state.client.add(magnet_link);
         this.append_torrent_log(magnet_link);
 
         torrent.on('ready', () => {
@@ -191,7 +189,6 @@ export default class Home extends Component {
 
         this.state.client.seed(file, {
             name: randstring.generate() + ".mp4",
-            announce: announceList,
         }, torrent => {
             console.log(torrent);
             torrent.on('infoHash', () => this.append_torrent_log('Hash Determined.'));
