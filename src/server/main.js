@@ -65,30 +65,33 @@ http.listen(PORT, () => {
  */
 const trackerserver = new Tracker({
     udp: false,
-    http: true, // enable http server? [default=true]
-    ws: true, // enable websocket server? [default=true]
-    stats: true, // enable web-based statistics? [default=true]
+    http: false,
+    ws: true,
+    stats: true,
 });
 
-trackerserver.listen(TRACKERPORT, 'tracker.nolife.best', () => {
-    console.log('Tracker server startup complete', TRACKERPORT);
-});
+trackerserver.listen(TRACKERPORT);
 
 trackerserver.on('error', function (err) {
     // fatal trackerserver error!
     console.log(err.message);
-})
+});
   
 trackerserver.on('warning', function (err) {
     // client sent bad data. probably not a problem, just a buggy client.
     console.log(err.message);
-})
+});
   
 trackerserver.on('listening', function () {
     // fired when all requested trackerservers are listening
     console.log('listening on http port:' + trackerserver.http.address().port);
-})
+});
 
 trackerserver.on('start', (addr) => {
     console.log('got start message from ' + addr)
-})
+});
+
+const onHttpRequest = trackerserver.onHttpRequest.bind(trackerserver);
+
+app.get('/announce', onHttpRequest);
+app.get('/stats', onHttpRequest);
