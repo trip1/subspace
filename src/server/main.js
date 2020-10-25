@@ -106,7 +106,7 @@ function remove_torrent_data(torrentID){
     try{
         const t = torrent_server.get(torrentID);
         if(t){
-            fs.unlink(t.path, (err) => {
+            fs.rmdir(t.path, (err) => {
                 if(err){
                     console.error('Failed to remove file', err);
                 }
