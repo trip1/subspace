@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import WebTorrent from 'webtorrent';
+import WebTorrent from 'webtorrent-hybrid';
 import Card from '../../Components/Containers/Card';
 import StatsCard from '../../Components/StatsCard';
 import SimplePeer from 'simple-peer';
@@ -38,6 +38,7 @@ export default class Home extends Component {
                     }
                 }
             }),
+            // client: new WebTorrent(),
             wire: null,
             torrent: null,
             is_downloading: false,
@@ -204,8 +205,6 @@ export default class Home extends Component {
         setInterval(this.update_state, 250);
 
         this.state.client.seed(file, {
-            announce: announceList,
-        }, {
             name: randstring.generate() + ".mp4",
         }, torrent => {
             console.log(torrent);
@@ -239,8 +238,6 @@ export default class Home extends Component {
         this.setState({
             wire
         });
-
-        wire.setKeepAlive(true);
 
         wire.on('handshake', (infoHash, peerId, extensions) => {
             console.log('Handshake from', peerId);
