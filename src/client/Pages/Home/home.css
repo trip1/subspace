@@ -36,3 +36,7 @@
     max-height: 120px;
     overflow: auto;
 }
+
+.text-sm {
+    font-size: smaller;
+}

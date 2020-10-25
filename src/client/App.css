@@ -1,3 +1,7 @@
+.no-margin {
+    margin: 0px;
+}
+
 .margin-m {
     margin: 8px;
 }
@@ -10,10 +14,55 @@
     margin: 16px 0px;
 }
 
+.no-padding {
+    padding: 0px;
+}
+
+.padding-sm {
+    padding: 4px;
+}
+
+.padding-m {
+    padding: 8px;
+}
+
 .full_width {
     width: 100%;
 }
 
 .hide_overflow {
     overflow: hidden;
+}
+
+.flex {
+    display: flex;
+}
+
+.row {
+    flex-direction: row;
+}
+
+.col {
+    flex-direction: column;
+}
+
+.end {
+    justify-content: end;
+}
+
+.row-center {
+    justify-content: center;
+}
+
+.space-between {
+    justify-content: space-between;
+}
+
+.space-around {
+    justify-content: space-around;
+}
+
+.align-center {
+    align-content: center;
+    align-items: center;
 }

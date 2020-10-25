@@ -21,6 +21,7 @@ export default class Home extends Component {
                     }
                 }
             }),
+            wire: null,
             torrent: null,
             is_downloading: false,
             is_loaded: false,
@@ -205,7 +206,6 @@ export default class Home extends Component {
 
             socketapi.submit_torrent(torrent.magnetURI);
 
-            console.log(torrent.files)
             const file = torrent.files.find(function (file) {
                 return file.name.endsWith('.mp4');
             });
@@ -217,6 +217,12 @@ export default class Home extends Component {
     }
 
     handle_wire(wire){
+        this.setState({
+            wire
+        });
+
+        wire.setKeepAlive(true);
+
         wire.on('handshake', (infoHash, peerId, extensions) => {
             console.log('Handshake from', peerId);
             console.log(extensions.dht) // supports DHT (BEP-0005)
@@ -405,30 +411,41 @@ export default class Home extends Component {
                 <div className="right_container">
                     <div className="margin-tb-l">
                         <Card className="log_container" id="client_logs">
-                            <div style={{
+                            <div className="padding-m" style={{
                                 overflow: 'hidden',
                             }}>
-                                <h4>Client Logs</h4>
+                                <h4 className="no-margin">Client Logs</h4>
                                 {this.client_logs()}
                             </div>
                         </Card>
                     </div>
                     <div className="margin-tb-l"> 
                         <Card className="log_container" id="torrent_logs">
-                            <div style={{
+                            <div className="padding-m" style={{
                                 overflow: 'hidden',
                             }}>
-                                <h4>Torrent Logs</h4>
+                                <h4 className="no-margin">Torrent Logs</h4>
                                 {this.torrent_logs()}
                             </div>
                         </Card>
                     </div>
                     <div className="margin-tb-l"> 
                         <Card className="log_container" id="wire_logs">
-                            <div style={{
+                            <div className="padding-m" style={{
                                 overflow: 'hidden',
                             }}>
-                                <h4>Wire Logs</h4>
+                                <div className="flex col space-around">
+                                    <h4 className="no-margin">Wire Logs</h4>
+                                    <div className="flex row space-between">
+                                        <p className="text-sm">Am Choking:</p>
+                                        <p className="text-sm">{this.state.wire ? `${this.state.wire.amChoking}` : "n/a"}</p>
+                                    </div>
+                                    <div className="flex row space-between">
+                                        <p className="text-sm">Peer Choking:</p>
+                                        <p className="text-sm">{this.state.wire ? `${this.state.wire.peerChoking}` : "n/a"}</p>
+                                    </div>
+                                    
+                                </div>
                                 {this.wire_logs()}
                             </div>
                         </Card>
