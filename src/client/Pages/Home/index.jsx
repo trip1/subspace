@@ -149,6 +149,7 @@ export default class Home extends Component {
         this.append_torrent_log('Adding torrent');
 
         const torrent = this.state.client.add(magnet_link);
+        this.append_torrent_log(magnet_link);
 
         torrent.on('ready', () => {
             this.append_torrent_log('Torrent Ready!');
@@ -183,7 +184,6 @@ export default class Home extends Component {
 
     upload_file(){
         const file = document.getElementById('file_upload').files[0];
-        console.log(file);
         setInterval(this.update_state, 250);
 
         this.state.client.seed(file, {
@@ -205,6 +205,7 @@ export default class Home extends Component {
             });
 
             socketapi.submit_torrent(torrent.magnetURI);
+            this.append_torrent_log(torrent.magnetURI);
 
             const file = torrent.files.find(function (file) {
                 return file.name.endsWith('.mp4');
