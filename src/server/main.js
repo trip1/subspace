@@ -1,10 +1,10 @@
 const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
-const Tracker = require('bittorrent-tracker').Server;
+// const Tracker = require('bittorrent-tracker').Server;
 
 const PORT = 8080;
-const TRACKERPORT = 8000;
+// const TRACKERPORT = 8000;
 
 const links = {};
 
@@ -63,35 +63,35 @@ http.listen(PORT, () => {
 /**
  * Bittorrent Tracker setup
  */
-const trackerserver = new Tracker({
-    udp: false,
-    http: false,
-    ws: true,
-    stats: true,
-});
+// const trackerserver = new Tracker({
+//     udp: false,
+//     http: false,
+//     ws: true,
+//     stats: true,
+// });
 
-trackerserver.listen(TRACKERPORT);
+// trackerserver.listen(TRACKERPORT);
 
-trackerserver.on('error', function (err) {
-    // fatal trackerserver error!
-    console.log(err.message);
-});
+// trackerserver.on('error', function (err) {
+//     // fatal trackerserver error!
+//     console.log(err.message);
+// });
   
-trackerserver.on('warning', function (err) {
-    // client sent bad data. probably not a problem, just a buggy client.
-    console.log(err.message);
-});
+// trackerserver.on('warning', function (err) {
+//     // client sent bad data. probably not a problem, just a buggy client.
+//     console.log(err.message);
+// });
   
-trackerserver.on('listening', function () {
-    // fired when all requested trackerservers are listening
-    console.log('listening on http port:' + trackerserver.http.address().port);
-});
+// trackerserver.on('listening', function () {
+//     // fired when all requested trackerservers are listening
+//     console.log('listening on http port:' + trackerserver.http.address().port);
+// });
 
-trackerserver.on('start', (addr) => {
-    console.log('got start message from ' + addr)
-});
+// trackerserver.on('start', (addr) => {
+//     console.log('got start message from ' + addr)
+// });
 
-const onHttpRequest = trackerserver.onHttpRequest.bind(trackerserver);
+// const onHttpRequest = trackerserver.onHttpRequest.bind(trackerserver);
 
-app.get('/announce', onHttpRequest);
-app.get('/stats', onHttpRequest);
+// app.get('/announce', onHttpRequest);
+// app.get('/stats', onHttpRequest);
