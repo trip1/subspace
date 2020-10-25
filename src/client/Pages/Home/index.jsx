@@ -12,13 +12,31 @@ const announceList = [
     'wss://tracker.openwebtorrent.com',
     'wss://tracker.btorrent.xyz',
     'wss://video.blender.org:443/tracker/socket',
-    // 'wss://tube.privacytools.io:443/tracker/socket',
-    // 'wss://tracker.sloppyta.co:443/announce',
-    // 'wss://tracker.lab.vvc.niif.hu:443/announce',
-    // 'wss://tracker.files.fm:7073/announce',
-    // 'wss://peertube.cpy.re:443/tracker/socket',
-    // 'wss://open.tube:443/tracker/socket',
-    // 'wss://hub.bugout.link:443/announce',
+    'wss://tube.privacytools.io:443/tracker/socket',
+    'wss://tracker.sloppyta.co:443/announce',
+    'wss://tracker.lab.vvc.niif.hu:443/announce',
+    'wss://tracker.files.fm:7073/announce',
+    'wss://peertube.cpy.re:443/tracker/socket',
+    'wss://open.tube:443/tracker/socket',
+    'wss://hub.bugout.link:443/announce',
+    // 'udp://tracker.opentrackr.org:1337/announce',
+    // 'udp://9.rarbg.to:2710/announce',
+    // 'udp://9.rarbg.me:2710/announce',
+    // 'udp://tracker.internetwarriors.net:1337/announce',
+    // 'udp://tracker.leechers-paradise.org:6969/announce',
+    // 'udp://tracker.cyberia.is:6969/announce',
+    // 'udp://exodus.desync.com:6969/announce',
+    // 'udp://explodie.org:6969/announce',
+    // 'udp://tracker3.itzmx.com:6961/announce',
+    // 'udp://tracker.tiny-vps.com:6969/announce',
+    // 'udp://open.stealth.si:80/announce',
+    // 'udp://tracker.torrent.eu.org:451/announce',
+    // 'udp://tracker.ds.is:6969/announce',
+    // 'udp://retracker.lanta-net.ru:2710/announce',
+    // 'udp://tracker.moeking.me:6969/announce',
+    // 'udp://ipv4.tracker.harry.lu:80/announce',
+    // 'udp://zephir.monocul.us:6969/announce',
+    // 'udp://valakas.rollo.dnsabr.com:2710/announce',
 ];
 
 export default class Home extends Component {
@@ -98,11 +116,13 @@ export default class Home extends Component {
             case "init":
                 const links = [];
                 for(let i in msg.payload){
-                    links.push(...msg.payload[i]);
+                    links.push(msg.payload[i]);
                 }
 
                 console.log('links', links);
-                this.found_new_torrent({payload: links});
+                if(links.length > 0){
+                    this.found_new_torrent({payload: links});
+                }
                 break;
             case "torrent_load":
                 this.found_new_torrent(msg);
@@ -114,19 +134,19 @@ export default class Home extends Component {
 
     found_new_torrent(data){
         console.log('Found new torrents', typeof data.payload, data.payload);
-        let t = [];
+        const existing = [].concat(this.state.server_torrents);
 
         switch(typeof data.payload){
             case 'object':
-                t = data.payload;
+                existing.push(Buffer.from(data.payload));
                 break;
             case 'string':
-                t = [data.payload];
+                existing.push(data.payload);
                 break;
         }
 
         this.setState({
-            server_torrents: t.concat(this.state.server_torrents),
+            server_torrents: existing,
         });
     }
 
@@ -134,7 +154,7 @@ export default class Home extends Component {
         if(this.state.server_torrents.length > 0){
             const t = [];
             this.state.server_torrents.forEach((tor, index) => {
-                t.push(<div onClick={() => this.load_torrent(tor)} key={`server_torrent_${index}`}>{tor.slice(21, 31)}</div>);
+                t.push(<div onClick={() => this.load_torrent(tor)} key={`server_torrent_${index}`}>File {index}</div>);
             });
 
             return (
@@ -161,8 +181,9 @@ export default class Home extends Component {
         setInterval(this.update_state, 250);
         this.append_torrent_log('Adding torrent');
 
+        console.log('Adding torrent', magnet_link);
         const torrent = this.state.client.add(magnet_link);
-        this.append_torrent_log(magnet_link);
+        // this.append_torrent_log(magnet_link);
 
         torrent.on('ready', () => {
             this.append_torrent_log('Torrent Ready!');
@@ -217,7 +238,7 @@ export default class Home extends Component {
                 is_downloading: false,
             });
 
-            socketapi.submit_torrent(torrent.magnetURI);
+            socketapi.submit_torrent(torrent.torrentFile);
             this.append_torrent_log(torrent.magnetURI);
 
             const file = torrent.files.find(function (file) {
