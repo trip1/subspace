@@ -30,15 +30,15 @@ const config = {
     }),
     new CompressionPlugin({
         algorithm: 'gzip',
-        test: /\.js(\?.*)?$/i,
+        test: /\.(js|css|html|svg)$/,
         cache: true,
-        filename: '[name].gz'
+        filename: '[name][ext].gz'
       }),
     new CompressionPlugin({
       algorithm: 'brotliCompress',
-      test: /\.js(\?.*)?$/i,
+      test: /\.(js|css|html|svg)$/,
       cache: true,
-      filename: '[name].br',
+      filename: '[name][ext].br',
       compressionOptions: { level: 11 },
     }),
   ],
