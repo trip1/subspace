@@ -43,7 +43,7 @@ io.on('connection', (socket) => {
         console.log('room_msg:', data);
         links[socket.conn.id] = data.payload;
 
-        torrent_server.add(data.payload[0].magnetURI, torrent_added);
+        // torrent_server.add(data.payload[0].magnetURI, torrent_added);
 
         io.to(data.room).emit("room_msg", data);
     });
