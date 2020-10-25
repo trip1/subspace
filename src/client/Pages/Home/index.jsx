@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import WebTorrent from 'webtorrent';
+import WebTorrent from 'webtorrent-hybrid';
 import Card from '../../Components/Containers/Card';
 import StatsCard from '../../Components/StatsCard';
 import SimplePeer from 'simple-peer';
