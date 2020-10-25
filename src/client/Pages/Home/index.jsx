@@ -27,17 +27,11 @@ export default class Home extends Component {
 
         this.state = {
             client: new WebTorrent({
-                // tracker: {
-                //     rtcConfig: {
-                //         ...SimplePeer.config,
-                //     }
-                // },
-                tracker: false,
-                dht: {
-                    host: '127.0.0.1',
-                    maxAge: 500,
-                }
-                // announce: [],
+                tracker: {
+                    rtcConfig: {
+                        ...SimplePeer.config,
+                    }
+                },
             }),
             wire: null,
             torrent: null,
@@ -210,8 +204,8 @@ export default class Home extends Component {
         setInterval(this.update_state, 250);
 
         this.state.client.seed(file, {
-            name: randstring.generate() + ".mp4",
             announce: announceList,
+            name: randstring.generate() + ".mp4",
         }, torrent => {
             console.log(torrent);
             torrent.on('infoHash', () => this.append_torrent_log('Hash Determined.'));
