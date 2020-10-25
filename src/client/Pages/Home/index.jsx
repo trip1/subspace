@@ -8,6 +8,7 @@ import './home.css';
 import socketapi from '../../api/socket';
 
 const torrentId = 'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent'
+const announceList = ['wss://tracker.openwebtorrent.com', 'wss://tracker.btorrent.xyz'];
 
 export default class Home extends Component {
     constructor(props){
@@ -148,7 +149,9 @@ export default class Home extends Component {
         setInterval(this.update_state, 250);
         this.append_torrent_log('Adding torrent');
 
-        const torrent = this.state.client.add(magnet_link);
+        const torrent = this.state.client.add(magnet_link, {
+            announce: announceList,
+        });
         this.append_torrent_log(magnet_link);
 
         torrent.on('ready', () => {
@@ -188,7 +191,7 @@ export default class Home extends Component {
 
         this.state.client.seed(file, {
             name: randstring.generate() + ".mp4",
-            announce: ['wss://tracker.openwebtorrent.com', 'wss://tracker.btorrent.xyz'],
+            announce: announceList,
         }, torrent => {
             console.log(torrent);
             torrent.on('infoHash', () => this.append_torrent_log('Hash Determined.'));
