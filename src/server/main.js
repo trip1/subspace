@@ -1,18 +1,22 @@
 const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
-const DHT = require('bittorrent-dht');
+// const DHT = require('bittorrent-dht');
 const Webtorrent = require('webtorrent-hybrid');
+const Server = require('socket.io');
 
-const PORT = 80;
-const DHTPORT = 20000;
-
+const PORT = 8080;
 const links = {};
 
 /**
  * Setup Torrent server
  */
 const torrent_server = new Webtorrent();
+// const dht = new DHT()
+
+// dht.listen(20000, function () {
+//     console.log('DHT Listening')
+// });
 
 /**
  * Express server setup
@@ -23,8 +27,7 @@ app.use(express.static('prod'));
 /**
  * WebSocket server setup
  */
-const Server = require('socket.io');
-const webtorrentHybrid = require('webtorrent-hybrid');
+
 const io = new Server(http, {
     path: '/wss',
 });
@@ -42,8 +45,7 @@ io.on('connection', (socket) => {
     socket.on('torrent_load', (data) => {
         console.log('room_msg:', data);
         links[socket.conn.id] = data.payload;
-
-        // torrent_server.add(data.payload[0].magnetURI, torrent_added);
+        torrent_server.add(Buffer.from(data.payload[0].torrentFile), torrent_added);
 
         io.to(data.room).emit("room_msg", data);
     });
@@ -55,6 +57,8 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', (reason) => {
         console.log("Socket disconnected", reason);
+        console.log(torrent_server.torrents);
+
         if(links[socket.conn.id]){
             torrent_server.remove(links[socket.conn.id][0].magnetURI);
             delete links[socket.conn.id];
@@ -64,20 +68,6 @@ io.on('connection', (socket) => {
 
 http.listen(PORT, () => {
     console.log('App listening on:', PORT);
-});
-
-
-/**
- * Bittorrent DHT setup
- */
-const dht = new DHT();
-
-dht.listen(DHTPORT, function () {
-    console.log('DHT Now Listening', DHTPORT)
-});
-
-dht.on('peer', function (peer, infoHash, from) {
-    console.log('found potential peer ' + peer.host + ':' + peer.port + ' through ' + from.address + ':' + from.port)
 });
 
 /**
@@ -93,5 +83,9 @@ function torrent_added(torrent){
     torrent.on('error', (err) => console.log(`ERROR: ${err}.`));
     torrent.on('done', () => {
         console.log('Torrent download complete');
-    })
+    });
 }
+
+// function addDhtNode(node){
+//     dht.addNode(node);
+// }
