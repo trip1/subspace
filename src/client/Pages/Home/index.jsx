@@ -33,7 +33,6 @@ export default class Home extends Component {
                     }
                 }
             }),
-            // client: new WebTorrent(),
             wire: null,
             torrent: null,
             is_downloading: false,
