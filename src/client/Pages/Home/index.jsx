@@ -187,8 +187,7 @@ export default class Home extends Component {
 
         this.state.client.seed(file, {
             name: randstring.generate() + ".mp4",
-            // announce: ['wss://tracker.openwebtorrent.com', 'wss://tracker.btorrent.xyz'],
-            announce: ['wss://tracker.nolife.best', 'ws://tracker.nolife.best'],
+            announce: ['wss://tracker.openwebtorrent.com', 'wss://tracker.btorrent.xyz'],
         }, torrent => {
             console.log(torrent);
             torrent.on('infoHash', () => this.append_torrent_log('Hash Determined.'));
