@@ -1,6 +1,7 @@
 .home {
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-around;
 }
 
 .left_container {
@@ -26,9 +27,13 @@
     transition-duration: 0.2s;
 }
 
+.video_container {
+    flex-grow: 1;
+}
+
 .video_player {
+    
     border: 1px solid lightblue;
-    max-width: 600px;
     width: auto;
 }
 

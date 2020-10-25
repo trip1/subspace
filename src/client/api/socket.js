@@ -24,12 +24,12 @@ io.on('new_user', data => {
     console.log(data);
 });
 
-function submit_torrent(magnetURI=''){
-    console.log('Broadcasting torrent', magnetURI.slice(0, 20));
+function submit_torrent(data=''){
+    console.log('Broadcasting torrent', data.infoHash);
     io.emit('torrent_load', {
         room: 'waiting_room',
         type: "torrent_load",
-        payload: magnetURI,
+        payload: data,
     });
 }
 

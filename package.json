@@ -35,6 +35,7 @@
     "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
+    "bittorrent-dht": "^10.0.0",
     "end-of-stream": "^1.4.1",
     "express": "^4.17.1",
     "nodemon": "^2.0.5",
@@ -45,7 +46,8 @@
     "simple-peer": "^9.7.2",
     "socket.io": "^2.3.0",
     "socket.io-client": "^2.3.1",
-    "webtorrent": "^0.109.1"
+    "webtorrent": "^0.109.1",
+    "webtorrent-hybrid": "^4.0.2"
   },
   "compress": {
     "gzip": {

@@ -27,11 +27,16 @@ export default class Home extends Component {
 
         this.state = {
             client: new WebTorrent({
-                tracker: {
-                    rtcConfig: {
-                        ...SimplePeer.config,
-                    }
-                }
+                // tracker: false,
+                dht: true,
+                // dht: {
+                //     bootstrap: ['10.0.1.33:20000'],
+                // },
+                // tracker: {
+                //     rtcConfig: {
+                //         ...SimplePeer.config,
+                //     }
+                // }
             }),
             wire: null,
             torrent: null,
@@ -117,25 +122,16 @@ export default class Home extends Component {
         console.log('Found new torrents', typeof data.payload, data.payload);
         const existing = [].concat(this.state.server_torrents);
 
-        if(Buffer.isBuffer(data.payload) || ArrayBuffer.isView(data.payload) || data.payload.byteLength > 0){
-            existing.push(Buffer.from(data.payload));
-        } else {
-            data.payload.forEach(d => {
-                console.log(d);
-                d.forEach(b => {
-                    existing.push(Buffer.from(b));
+        data.payload.forEach(d => {
+            console.log(d);
+            if(d[0]){
+                d.forEach(ds => {
+                    existing.push(Buffer.from(ds.torrentFile));
                 })
-            });
-        }
-
-        // switch(typeof data.payload){
-        //     case 'object':
-        //         existing.push(Buffer.from(data.payload));
-        //         break;
-        //     case 'string':
-        //         existing.push(data.payload);
-        //         break;
-        // }
+            } else {
+                existing.push(Buffer.from(d.torrentFile));
+            }
+        })
 
         this.setState({
             server_torrents: existing,
@@ -213,8 +209,8 @@ export default class Home extends Component {
         setInterval(this.update_state, 250);
 
         this.state.client.seed(file, {
-            name: randstring.generate() + ".mp4",
             announce: announceList,
+            name: randstring.generate() + ".mp4",
         }, torrent => {
             console.log(torrent);
             torrent.on('infoHash', () => this.append_torrent_log('Hash Determined.'));
@@ -230,7 +226,11 @@ export default class Home extends Component {
                 is_downloading: false,
             });
 
-            socketapi.submit_torrent(torrent.torrentFile);
+            socketapi.submit_torrent([{
+                infoHash: torrent.infoHash,
+                magnetURI: torrent.magnetURI,
+                torrentFile: torrent.torrentFile,
+            }]);
             this.append_torrent_log(torrent.magnetURI);
 
             const file = torrent.files.find(function (file) {
@@ -247,6 +247,15 @@ export default class Home extends Component {
         this.setState({
             wire
         });
+
+        wire.on('port', port => {
+            if (!wire.remoteAddress) {
+                return this._debug('ignoring PORT from peer with no address')
+            }
+
+            console.log(wire.remoteAddress, port);
+            this.state.client.dht.addNode({ host: wire.remoteAddress, port })
+        })
 
         wire.on('handshake', (infoHash, peerId, extensions) => {
             console.log('Handshake from', peerId);
@@ -429,8 +438,8 @@ export default class Home extends Component {
                     {this.upload_torrent_fields()}
                     {this.show_stat_cards()}
                 </div>
-                <div className="video_container">
-                    <video className="video_player" crossOrigin="anonymous" width="600px" height="200px" id='player'></video>
+                <div className="video_container flex col">
+                    <video className="video_player" crossOrigin="anonymous" id='player'></video>
                     {this.render_progress()}
                 </div>
                 <div className="right_container">
