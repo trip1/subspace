@@ -136,14 +136,22 @@ export default class Home extends Component {
         console.log('Found new torrents', typeof data.payload, data.payload);
         const existing = [].concat(this.state.server_torrents);
 
-        switch(typeof data.payload){
-            case 'object':
-                existing.push(Buffer.from(data.payload));
-                break;
-            case 'string':
-                existing.push(data.payload);
-                break;
+        if(Buffer.isBuffer(data.payload)){
+            existing.push(Buffer.from(data.payload));
+        } else {
+            data.payload.forEach(d => {
+                existing.push(Buffer.from(d));
+            });
         }
+
+        // switch(typeof data.payload){
+        //     case 'object':
+        //         existing.push(Buffer.from(data.payload));
+        //         break;
+        //     case 'string':
+        //         existing.push(data.payload);
+        //         break;
+        // }
 
         this.setState({
             server_torrents: existing,
