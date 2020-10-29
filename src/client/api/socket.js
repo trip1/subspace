@@ -24,12 +24,13 @@ io.on('new_user', data => {
     console.log(data);
 });
 
-function submit_torrent(data=''){
-    console.log('Broadcasting torrent', data.infoHash);
+function submit_torrent(room, data=''){
+    console.log('Broadcasting torrent', data[0].infoHash);
+
     io.emit('torrent_load', {
-        room: 'waiting_room',
-        type: "torrent_load",
+        room,
         payload: data,
+        type: "torrent_load",
     });
 }
 

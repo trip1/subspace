@@ -7,13 +7,13 @@
 .left_container {
     min-width: 240px;
     padding-right: 16px;
-    max-width: 25%;
+    max-width: 33%;
 }
 
 .right_container {
     min-width: 240px;
     padding-left: 16px;
-    max-width: 25%;
+    max-width: 33%;
 }
 
 .progress_container {
@@ -32,9 +32,9 @@
 }
 
 .video_player {
-    
     border: 1px solid lightblue;
     width: auto;
+    max-width: 100%;
 }
 
 .log_container {

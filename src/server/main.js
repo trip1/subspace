@@ -8,6 +8,8 @@ const fs = require('fs');
 
 const PORT = 8080;
 const links = {};
+const rooms = [];
+
 const announceList = [
     'wss://tracker.openwebtorrent.com',
     'wss://tracker.btorrent.xyz',
@@ -25,11 +27,6 @@ const announceList = [
  * Setup Torrent server
  */
 const torrent_server = new Webtorrent();
-// const dht = new DHT()
-
-// dht.listen(20000, function () {
-//     console.log('DHT Listening')
-// });
 
 /**
  * Express server setup
@@ -57,10 +54,14 @@ io.on('connection', (socket) => {
 
     socket.on('torrent_load', (data) => {
         console.log('room_msg:', data);
+
         links[socket.conn.id] = data.payload;
         torrent_server.add(data.payload[0].magnetURI, torrent_added);
 
-        io.to(data.room).emit("room_msg", data);
+        create_room(data.room, socket);
+        console.log('New rooms', rooms);
+
+        io.to("waiting_room").emit("room_msg", data);
     });
 
     socket.on('subscribe', (data) => {
@@ -81,6 +82,16 @@ io.on('connection', (socket) => {
         }
     });
 });
+
+function create_room(name, socket){
+    let new_room = {
+        name,
+        users: [],
+        owner: socket.conn.id,
+    }
+
+    rooms.push(new_room);
+}
 
 http.listen(PORT, () => {
     console.log('App listening on:', PORT);
@@ -118,7 +129,3 @@ function remove_torrent_data(torrentID){
         console.error("Failed to remove torrent", err);
     }
 }
-
-// function addDhtNode(node){
-//     dht.addNode(node);
-// }

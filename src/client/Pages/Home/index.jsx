@@ -44,6 +44,7 @@ export default class Home extends Component {
             torrent_logs: [],
             wire_logs: [],
             server_torrents: [],
+            show_logs: false,
         }
 
         this.wire_logs = this.wire_logs.bind(this);
@@ -55,6 +56,7 @@ export default class Home extends Component {
         this.load_torrent = this.load_torrent.bind(this);
         this.update_state = this.update_state.bind(this);
         this.handle_socket = this.handle_socket.bind(this);
+        this.left_container = this.left_container.bind(this);
         this.append_wire_log = this.append_wire_log.bind(this);
         this.render_progress = this.render_progress.bind(this);
         this.show_stat_cards = this.show_stat_cards.bind(this);
@@ -65,6 +67,9 @@ export default class Home extends Component {
         this.upload_torrent_fields = this.upload_torrent_fields.bind(this);
         this.render_server_torrents = this.render_server_torrents.bind(this);
         this.download_torrent_fields = this.download_torrent_fields.bind(this);
+
+        this.on_play = this.on_play.bind(this);
+        this.on_pause = this.on_pause.bind(this)
     }
 
     new_client(){
@@ -89,10 +94,22 @@ export default class Home extends Component {
 
         this.state.client.on('warn', (w) => this.append_client_log(`WARN: ${w}`));
         this.state.client.on('error', (e) => this.append_client_log(`ERROR: ${e}`));
+
+        const player = document.getElementById('player');
+        player.addEventListener('play', this.on_play);
+        player.addEventListener('pause', this.on_pause);
+    }
+
+    on_play(){
+        console.log('Playing!');
+    }
+
+    on_pause(){
+        console.log('Paused!');
     }
 
     handle_socket(msg){
-        console.log(msg);
+        console.log('Socket message', msg);
         switch(msg.type){
             case "init":
                 const links = [];
@@ -121,10 +138,10 @@ export default class Home extends Component {
             console.log(d);
             if(d[0]){
                 d.forEach(ds => {
-                    existing.push(Buffer.from(ds.torrentFile));
+                    existing.push({name: data.room, buff: Buffer.from(ds.torrentFile)});
                 })
             } else {
-                existing.push(Buffer.from(d.torrentFile));
+                existing.push({name: data.room, buff: Buffer.from(d.torrentFile)});
             }
         })
 
@@ -137,7 +154,7 @@ export default class Home extends Component {
         if(this.state.server_torrents.length > 0){
             const t = [];
             this.state.server_torrents.forEach((tor, index) => {
-                t.push(<div onClick={() => this.load_torrent(tor)} key={`server_torrent_${index}`}>File {index}</div>);
+                t.push(<div onClick={() => this.load_torrent(tor.buff)} key={`server_torrent_${index}`}>{tor.name}</div>);
             });
 
             return (
@@ -201,6 +218,8 @@ export default class Home extends Component {
 
     upload_file(){
         const file = document.getElementById('file_upload').files[0];
+        const room = document.getElementById('room_name').value;
+
         setInterval(this.update_state, 250);
 
         this.state.client.seed(file, {
@@ -221,11 +240,12 @@ export default class Home extends Component {
                 is_downloading: false,
             });
 
-            socketapi.submit_torrent([{
+            socketapi.submit_torrent(room, [{
                 infoHash: torrent.infoHash,
                 magnetURI: torrent.magnetURI,
                 torrentFile: torrent.torrentFile,
             }]);
+
             this.append_torrent_log(torrent.magnetURI);
 
             const file = torrent.files.find(function (file) {
@@ -342,28 +362,28 @@ export default class Home extends Component {
             )
         }
 
-        return false;
+        return null;
     }
 
     download_torrent_fields(){
         if(!this.state.is_downloading && !this.state.is_loaded){
             return (
-                <Card>
-                    <div>
-                        {this.render_server_torrents()}
-                    </div>
-                    <div className="margin-l">
-                        <div>
-                            <label htmlFor="magnet_link_input">Magnet Link</label>
+                <div>
+                    {this.render_server_torrents()}
+                    {/* <Card>
+                        <div className="margin-l">
+                            <div>
+                                <label htmlFor="magnet_link_input">Magnet Link</label>
+                            </div>
+                            <div>
+                                <input id="magnet_link_input" type="text"></input>
+                            </div>
                         </div>
-                        <div>
-                            <input id="magnet_link_input" type="text"></input>
+                        <div className="margin-l">
+                            <button onClick={() => this.load_torrent()}>Load Torrent</button>
                         </div>
-                    </div>
-                    <div className="margin-l">
-                        <button onClick={() => this.load_torrent()}>Load Torrent</button>
-                    </div>
-                </Card>
+                    </Card> */}
+                </div>
             )
         }
 
@@ -375,16 +395,23 @@ export default class Home extends Component {
             return (
                 <Card>
                     <div className="margin-l">
-                        {/* <div>
-                            <label htmlFor="file_upload">Upload File</label>
-                        </div> */}
-                        <div>
+                        <div className="margin-m">
+                            <div>
+                                <label htmlFor="room_name">Room Name</label>
+                            </div>
+                            <div>
+                                <input id="room_name"></input>
+                            </div>
+                        </div>
+                        <div className="margin-m">
                             <input id="file_upload" type="file"></input>
                         </div>
+                        
+                        <div className="margin-m">
+                            <button onClick={this.upload_file}>Upload File</button>
+                        </div>
                     </div>
-                    <div className="margin-l">
-                        <button onClick={this.upload_file}>Upload File</button>
-                    </div>
+                    
                 </Card>
             )
         }
@@ -425,19 +452,10 @@ export default class Home extends Component {
         ));
     }
 
-    render() {
-        return (
-            <div className="home">
-                <div className="left_container">
-                    {this.download_torrent_fields()}
-                    {this.upload_torrent_fields()}
-                    {this.show_stat_cards()}
-                </div>
-                <div className="video_container flex col">
-                    <video className="video_player" crossOrigin="anonymous" id='player'></video>
-                    {this.render_progress()}
-                </div>
-                <div className="right_container">
+    logs(){
+        if(this.state.show_logs){
+            return (
+                <div>
                     <div className="margin-tb-l">
                         <Card className="log_container" id="client_logs">
                             <div className="padding-m" style={{
@@ -479,6 +497,43 @@ export default class Home extends Component {
                             </div>
                         </Card>
                     </div>
+                </div>
+            )
+        }
+
+        return null;
+    }
+
+    left_container(){
+        return (
+            <div>
+                {this.download_torrent_fields()}
+                {this.upload_torrent_fields()}
+                {this.show_stat_cards()}
+                
+                <button onClick={() => {
+                    this.setState({
+                        show_stats: !this.state.show_stats
+                    })
+                }}>
+                    {this.state.show_stats ? "Hide" : "Show"} Stats
+                </button>
+            </div>
+        )
+    }
+
+    render() {
+        return (
+            <div className="home">
+                <div className="left_container">
+                    {this.left_container()}
+                </div>
+                <div className="video_container flex col">
+                    <video className="video_player" crossOrigin="anonymous" id='player'></video>
+                    {this.render_progress()}
+                </div>
+                <div className="right_container">
+                    {this.logs()}
                 </div>
             </div>
         )
