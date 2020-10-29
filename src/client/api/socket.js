@@ -34,6 +34,10 @@ function submit_torrent(room, data=''){
     });
 }
 
+function video_state(data){
+    io.emit('video_state', data);
+}
+
 function join_lobby(lobby_name="waiting_room", cb){
     console.log('Joining lobby', lobby_name);
     io.emit("subscribe", lobby_name);
@@ -48,6 +52,7 @@ function init_socket(cb){
 export default {
     join_lobby,
     init_socket,
+    video_state,
     submit_torrent,
 }
 

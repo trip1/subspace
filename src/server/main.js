@@ -64,6 +64,11 @@ io.on('connection', (socket) => {
         io.to("waiting_room").emit("room_msg", data);
     });
 
+    socket.on('video_state', (data) => {
+        console.log('Video state update', data.room, data);
+        io.to(data.room).emit("room_msg", data);
+    })
+
     socket.on('subscribe', (data) => {
         console.log(data);
         socket.join(data);

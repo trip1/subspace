@@ -45,13 +45,19 @@ export default class Home extends Component {
             wire_logs: [],
             server_torrents: [],
             show_logs: false,
+            room: "",
+            is_viewer: false,
+            is_streamer: false,
         }
 
+        this.on_play = this.on_play.bind(this);
+        this.on_pause = this.on_pause.bind(this);
         this.wire_logs = this.wire_logs.bind(this);
         this.new_client = this.new_client.bind(this);
         this.client_logs = this.client_logs.bind(this);
         this.handle_wire = this.handle_wire.bind(this);
         this.upload_file = this.upload_file.bind(this);
+        this.get_timecode = this.get_timecode.bind(this);
         this.torrent_logs = this.torrent_logs.bind(this);
         this.load_torrent = this.load_torrent.bind(this);
         this.update_state = this.update_state.bind(this);
@@ -63,13 +69,11 @@ export default class Home extends Component {
         this.found_new_torrent = this.found_new_torrent.bind(this);
         this.append_client_log = this.append_client_log.bind(this);
         this.append_torrent_log = this.append_torrent_log.bind(this);
+        this.update_video_state = this.update_video_state.bind(this);
         this.torrent_downloading = this.torrent_downloading.bind(this);
         this.upload_torrent_fields = this.upload_torrent_fields.bind(this);
         this.render_server_torrents = this.render_server_torrents.bind(this);
         this.download_torrent_fields = this.download_torrent_fields.bind(this);
-
-        this.on_play = this.on_play.bind(this);
-        this.on_pause = this.on_pause.bind(this)
     }
 
     new_client(){
@@ -102,10 +106,26 @@ export default class Home extends Component {
 
     on_play(){
         console.log('Playing!');
+        socketapi.video_state({
+            room: this.state.room,
+            status: 'play',
+            timestamp: this.get_timecode(),
+            type: "video_state",
+        });
     }
 
     on_pause(){
         console.log('Paused!');
+        socketapi.video_state({
+            room: this.state.room,
+            status: 'pause',
+            timestamp: this.get_timecode(),
+            type: "video_state",
+        });
+    }
+
+    get_timecode(){
+       return document.getElementById('player').currentTime;
     }
 
     handle_socket(msg){
@@ -125,9 +145,27 @@ export default class Home extends Component {
             case "torrent_load":
                 this.found_new_torrent(msg);
                 break;
+            case "video_state":
+                this.update_video_state(msg);
+                break;
             default:
                 console.log("Socket event not handled", msg);
         }
+    }
+
+    update_video_state(data){
+        const player = document.getElementById('player');
+
+        switch(data.status){
+            case "play":
+                player.play();
+                break;
+            case "pause":
+                player.pause();
+                break;
+        }
+
+        player.currentTime = data.timestamp;
     }
 
     found_new_torrent(data){
@@ -154,7 +192,7 @@ export default class Home extends Component {
         if(this.state.server_torrents.length > 0){
             const t = [];
             this.state.server_torrents.forEach((tor, index) => {
-                t.push(<div onClick={() => this.load_torrent(tor.buff)} key={`server_torrent_${index}`}>{tor.name}</div>);
+                t.push(<div onClick={() => this.load_torrent(tor)} key={`server_torrent_${index}`}>{tor.name}</div>);
             });
 
             return (
@@ -167,8 +205,10 @@ export default class Home extends Component {
         return null;
     }
 
-    load_torrent(magnet_link=null){
+    load_torrent(tor){
         // If nothing is passed in, check the input field
+        let magnet_link = tor.buff;
+
         if(!magnet_link){
             magnet_link = document.getElementById('magnet_link_input').value.trim();
         }
@@ -177,6 +217,8 @@ export default class Home extends Component {
         if(!magnet_link || magnet_link === ""){
             magnet_link = torrentId;
         }
+
+        socketapi.join_lobby(tor.name, this.handle_socket);
 
         setInterval(this.update_state, 250);
         this.append_torrent_log('Adding torrent');
@@ -193,6 +235,7 @@ export default class Home extends Component {
 
             this.setState({
                 torrent,
+                is_viewer: true,
                 is_downloading: true,
             })
     
@@ -236,6 +279,8 @@ export default class Home extends Component {
 
             this.setState({
                 torrent,
+                room,
+                is_streamer: true,
                 is_loaded: true,
                 is_downloading: false,
             });
@@ -337,7 +382,7 @@ export default class Home extends Component {
     }
 
     show_stat_cards(){
-        if((this.state.is_downloading || this.state.is_loaded) && this.state.show_stats){
+        if((this.state.is_downloading || this.state.is_loaded) && this.state.show_stats && this.state.is_streamer){
             return (
                 <div className="full_width">
                     <div className="full_width margin-tb-l hide_overflow">
@@ -511,13 +556,19 @@ export default class Home extends Component {
                 {this.upload_torrent_fields()}
                 {this.show_stat_cards()}
                 
-                <button onClick={() => {
-                    this.setState({
-                        show_stats: !this.state.show_stats
-                    })
-                }}>
-                    {this.state.show_stats ? "Hide" : "Show"} Stats
-                </button>
+                {
+                    this.state.is_streamer
+                    ?
+                        <button onClick={() => {
+                            this.setState({
+                                show_stats: !this.state.show_stats
+                            })
+                        }}>
+                            {this.state.show_stats ? "Hide" : "Show"} Stats
+                        </button>
+                    : null
+                }
+                
             </div>
         )
     }
@@ -528,7 +579,7 @@ export default class Home extends Component {
                 <div className="left_container">
                     {this.left_container()}
                 </div>
-                <div className="video_container flex col">
+                <div className="video_container card flex col">
                     <video className="video_player" crossOrigin="anonymous" id='player'></video>
                     {this.render_progress()}
                 </div>
