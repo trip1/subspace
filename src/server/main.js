@@ -27,7 +27,7 @@ const announceList = [
 /**
  * Setup Torrent server
  */
-const torrent_server = new Webtorrent();
+// const torrent_server = new Webtorrent();
 
 /**
  * Express server setup
@@ -61,11 +61,7 @@ io.on('connection', (socket) => {
                 broadcaster = socket.id;
                 break;
             case "watcher":
-                console.log('Adding watcher', socket.id);
-                socket.to(broadcaster).emit("webrtc", {
-                    type: payload.type,
-                    id: socket.id,
-                });
+                
                 break;
             case "offer":
                 socket.to(payload.id).emit("webrtc", {
@@ -97,21 +93,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('watcher', () => {
-        socket.to(broadcaster).emit("watcher", socket.id);
-    });
-
-    socket.on('offer', (id, message) => {
-        socket.to(id).emit("offer", socket.id, message);
-    });
-
-    socket.on("answer", (id, message) => {
-        socket.to(id).emit("answer", socket.id, message);
-    });
-
-    socket.on("candidate", (id, message) => {
-        socket.to(id).emit("candidate", socket.id, message);
-    });
-
+        console.log('Adding watcher', socket.id);
+        socket.to(broadcaster).emit("webrtc", {
+            type: "watcher",
+            id: socket.id,
+        });
+    })
 
     /**
      * Torrent Calls
@@ -168,31 +155,31 @@ http.listen(PORT, () => {
  * Configure torrent server events
  */
 
-torrent_server.on('torrent', (torrent) => {
-    console.log('Torrent added', torrent.name);
-});
+// torrent_server.on('torrent', (torrent) => {
+//     console.log('Torrent added', torrent.name);
+// });
 
-function torrent_added(torrent){
-    torrent.on('warning', (w) => console.log(`WARN: ${w}.`));
-    torrent.on('error', (err) => console.log(`ERROR: ${err}.`));
-    torrent.on('done', () => {
-        console.log('Torrent download complete');
-    });
-}
+// function torrent_added(torrent){
+//     torrent.on('warning', (w) => console.log(`WARN: ${w}.`));
+//     torrent.on('error', (err) => console.log(`ERROR: ${err}.`));
+//     torrent.on('done', () => {
+//         console.log('Torrent download complete');
+//     });
+// }
 
-function remove_torrent_data(torrentID){
-    try{
-        const t = torrent_server.get(torrentID);
-        if(t){
-            fs.rmdir(t.path, { recursive: true }, (err) => {
-                if(err){
-                    console.error('Failed to remove file', err);
-                }
-            });
-        }
+// function remove_torrent_data(torrentID){
+//     try{
+//         const t = torrent_server.get(torrentID);
+//         if(t){
+//             fs.rmdir(t.path, { recursive: true }, (err) => {
+//                 if(err){
+//                     console.error('Failed to remove file', err);
+//                 }
+//             });
+//         }
 
-        torrent_server.remove(torrentID);
-    } catch(err){
-        console.error("Failed to remove torrent", err);
-    }
-}
+//         torrent_server.remove(torrentID);
+//     } catch(err){
+//         console.error("Failed to remove torrent", err);
+//     }
+// }

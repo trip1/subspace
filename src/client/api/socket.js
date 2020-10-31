@@ -51,9 +51,7 @@ function init_socket(cb){
 
 function init_webrtc(user_type, cb){
     io.connect();
-    io.emit("webrtc", {
-        type: user_type,
-    });
+    io.emit(user_type);
 
     io.on("webrtc", cb);
 }

@@ -4,17 +4,23 @@ import socketapi from '../../api/socket';
 const config = {
     iceServers: [
         {
-            urls: ["stun:stun.l.google.com:19302"]
+            urls: [
+                "stun:stun.l.google.com:19302",
+                "stun:stun2.l.google.com:19302",
+                // "stun:stun3.l.google.com:19302",
+                // "stun:stun4.l.google.com:19302",
+            ],
         }
     ]
 }
+
+const peerConnection = new RTCPeerConnection(config);
 
 export default class Streamer extends Component {
     constructor(props){
         super();
 
         this.state = {
-            peerConnection: new RTCPeerConnection(config),
             mediaConstrains: {
                 video: { facingMode: "user" },
                 audio: true,
@@ -51,20 +57,19 @@ export default class Streamer extends Component {
 
     on_offer(data){
         const {id, desc} = data;
-        // peerConnection = new RTCPeerConnection(config);
-        this.state.peerConnection
+        peerConnection
             .setRemoteDescription(desc)
-            .then(() => this.state.peerConnection.createAnswer())
-            .then(sdp => this.state.peerConnection.setLocalDescription(sdp))
+            .then(() => peerConnection.createAnswer())
+            .then(sdp => peerConnection.setLocalDescription(sdp))
             .then(() => {
                 socketapi.emit_webrtc({
                     type: "answer",
                     id,
-                    desc: this.state.peerConnection.localDescription,
+                    desc: peerConnection.localDescription,
                 })
             });
 
-            this.state.peerConnection.ontrack = event => {
+            peerConnection.ontrack = event => {
                 try{
                     console.log('Got track', event);
                     console.log('Streams', event.streams);
@@ -77,23 +82,23 @@ export default class Streamer extends Component {
                 }
             };
 
-            this.state.peerConnection.onicecandidate = event => {
-                if (event.candidate) {
+            peerConnection.onicecandidate = event => {
+                // if (event.candidate) {
                     socketapi.emit_webrtc({
                         type: "candidate",
                         id,
                         candidate: event.candidate,
                     })
-                } else {
-                    console.warn('No event candidate', event);
-                }
+                // } else {
+                //     console.warn('No event candidate', event);
+                // }
             };
     }
 
     on_candidate(data){
         const {id, candidate} = data;
 
-        this.state.peerConnection
+        peerConnection
         .addIceCandidate(new RTCIceCandidate(candidate))
         .catch(e => console.error(e));
     }
