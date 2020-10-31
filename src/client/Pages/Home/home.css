@@ -1,13 +1,13 @@
 .home {
     display: flex;
+    flex-direction: column;
     flex-wrap: wrap;
     justify-content: space-around;
 }
 
-.left_container {
+.stats_container {
     min-width: 240px;
-    padding-right: 16px;
-    max-width: 33%;
+    display: flex;
 }
 
 .right_container {

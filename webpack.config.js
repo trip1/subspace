@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin'); 
 const CompressionPlugin = require("compression-webpack-plugin");
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+
 require("@babel/polyfill");
 
 const config = {
@@ -35,7 +36,6 @@ const config = {
       template: './src/client/index.html',
       filename: 'index.html',
       inject: 'body',
-      
     }),
     new CompressionPlugin({
         algorithm: 'gzip',

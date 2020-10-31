@@ -25,10 +25,10 @@ io.on('new_user', data => {
 });
 
 function submit_torrent(room, data=''){
-    console.log('Broadcasting torrent', data[0].infoHash);
+    console.log('Broadcasting torrent', data.infoHash);
 
     io.emit('torrent_load', {
-        room,
+        name: room,
         payload: data,
         type: "torrent_load",
     });
@@ -49,10 +49,26 @@ function init_socket(cb){
     io.on('room_msg', cb);
 }
 
+function init_webrtc(user_type, cb){
+    io.connect();
+    io.emit("webrtc", {
+        type: user_type,
+    });
+
+    io.on("webrtc", cb);
+}
+
+function emit_webrtc(data){
+    console.log("Sending", data.type);
+    io.emit("webrtc", data);
+}
+
 export default {
     join_lobby,
     init_socket,
     video_state,
     submit_torrent,
+    init_webrtc,
+    emit_webrtc,
 }
 

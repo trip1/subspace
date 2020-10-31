@@ -62,7 +62,8 @@ export default class Home extends Component {
         this.load_torrent = this.load_torrent.bind(this);
         this.update_state = this.update_state.bind(this);
         this.handle_socket = this.handle_socket.bind(this);
-        this.left_container = this.left_container.bind(this);
+        this.stats_container = this.stats_container.bind(this);
+        this.upload_torrent = this.upload_torrent.bind(this);
         this.append_wire_log = this.append_wire_log.bind(this);
         this.render_progress = this.render_progress.bind(this);
         this.show_stat_cards = this.show_stat_cards.bind(this);
@@ -71,9 +72,11 @@ export default class Home extends Component {
         this.append_torrent_log = this.append_torrent_log.bind(this);
         this.update_video_state = this.update_video_state.bind(this);
         this.torrent_downloading = this.torrent_downloading.bind(this);
+        this.render_video_player = this.render_video_player.bind(this);
         this.upload_torrent_fields = this.upload_torrent_fields.bind(this);
         this.render_server_torrents = this.render_server_torrents.bind(this);
         this.download_torrent_fields = this.download_torrent_fields.bind(this);
+        this.upload_torrent_file_fields = this.upload_torrent_file_fields.bind(this);
     }
 
     new_client(){
@@ -82,8 +85,8 @@ export default class Home extends Component {
                 rtcConfig: {
                     ...SimplePeer.config,
                 }
-            }
-        })
+            },
+        });
 
         client.on('warning', (warn) => this.append_client_log(`WARN: ${warn}`));
         client.on('error', (err) => this.append_client_log(`ERROR: ${err}`));
@@ -132,18 +135,18 @@ export default class Home extends Component {
         console.log('Socket message', msg);
         switch(msg.type){
             case "init":
-                const links = [];
+                const rooms = [];
                 for(let i in msg.payload){
-                    links.push(msg.payload[i]);
+                    rooms.push(msg.payload[i]);
                 }
 
-                console.log('links', links);
-                if(links.length > 0){
-                    this.found_new_torrent({payload: links});
+                console.log('rooms', rooms);
+                if(rooms.length > 0){
+                    this.found_new_torrent(rooms, true);
                 }
                 break;
             case "torrent_load":
-                this.found_new_torrent(msg);
+                this.found_new_torrent(msg, false);
                 break;
             case "video_state":
                 this.update_video_state(msg);
@@ -168,20 +171,17 @@ export default class Home extends Component {
         player.currentTime = data.timestamp;
     }
 
-    found_new_torrent(data){
-        console.log('Found new torrents', typeof data.payload, data.payload);
+    found_new_torrent(data, init=false){
+        console.log('Found new torrents', data);
         const existing = [].concat(this.state.server_torrents);
 
-        data.payload.forEach(d => {
-            console.log(d);
-            if(d[0]){
-                d.forEach(ds => {
-                    existing.push({name: data.room, buff: Buffer.from(ds.torrentFile)});
-                })
-            } else {
-                existing.push({name: data.room, buff: Buffer.from(d.torrentFile)});
-            }
-        })
+        if(init){
+            data.forEach(d => {
+                existing.push({name: d.name, buff: Buffer.from(d.torrentFile)});    
+            })
+        } else {
+            existing.push({name: data.name, buff: Buffer.from(data.payload.torrentFile)});
+        }
 
         this.setState({
             server_torrents: existing,
@@ -192,13 +192,17 @@ export default class Home extends Component {
         if(this.state.server_torrents.length > 0){
             const t = [];
             this.state.server_torrents.forEach((tor, index) => {
-                t.push(<div onClick={() => this.load_torrent(tor)} key={`server_torrent_${index}`}>{tor.name}</div>);
+                t.push(<div onClick={() => this.load_torrent(tor)} key={`server_torrent_${index}`}>
+                    <Card>
+                        {tor.name}
+                    </Card>
+                </div>);
             });
 
             return (
-                <Card>
+                <div>
                     {t}
-                </Card>
+                </div>
             )
         }
 
@@ -206,8 +210,13 @@ export default class Home extends Component {
     }
 
     load_torrent(tor){
+        console.log(tor);
         // If nothing is passed in, check the input field
         let magnet_link = tor.buff;
+
+        if(!magnet_link){
+            magnet_link = tor.torrData.magnetURI;
+        }
 
         if(!magnet_link){
             magnet_link = document.getElementById('magnet_link_input').value.trim();
@@ -278,18 +287,18 @@ export default class Home extends Component {
             torrent.on('wire', this.handle_wire);
 
             this.setState({
-                torrent,
                 room,
                 is_streamer: true,
                 is_loaded: true,
                 is_downloading: false,
+                torrent,
             });
 
-            socketapi.submit_torrent(room, [{
+            socketapi.submit_torrent(room, {
                 infoHash: torrent.infoHash,
                 magnetURI: torrent.magnetURI,
                 torrentFile: torrent.torrentFile,
-            }]);
+            });
 
             this.append_torrent_log(torrent.magnetURI);
 
@@ -301,6 +310,46 @@ export default class Home extends Component {
                 file.renderTo('video#player');
             }
         })
+    }
+
+    upload_torrent(){
+        const torrentFile = document.getElementById('torrent_file').files[0];
+        const room = document.getElementById('room_name').value;
+
+        const torrent = this.state.client.add(torrentFile);
+
+        setInterval(this.update_state, 250);
+        this.append_torrent_log('Adding torrent');
+        console.log('Loading file', torrent);
+
+        this.setState({
+            torrent,
+            room,
+            is_streamer: true,
+            is_loaded: true,
+            is_downloading: false,
+        });
+
+        socketapi.submit_torrent(room, {
+            infoHash: torrent.infoHash,
+            magnetURI: torrent.magnetURI,
+            torrentFile: torrent.torrentFile,
+        });
+
+        torrent.on('done', () => {
+            this.append_torrent_log('Torrent done');
+            this.setState({
+                is_loaded: true,
+                is_downloading: false,
+            })
+        });
+
+        torrent.on('warning', (w) => this.append_torrent_log(`WARN: ${w}.`));
+        torrent.on('error', (err) => this.append_torrent_log(`ERROR: ${err}.`));
+        torrent.on('infoHash', () => this.append_torrent_log('Hash Determined.'));
+        torrent.on('metadata', () => this.append_torrent_log('Metadata Determined.'));
+        torrent.on('noPeers', () => this.append_torrent_log('No Peers'));
+        torrent.on('wire', this.handle_wire);
     }
 
     handle_wire(wire){
@@ -384,10 +433,7 @@ export default class Home extends Component {
     show_stat_cards(){
         if((this.state.is_downloading || this.state.is_loaded) && this.state.show_stats && this.state.is_streamer){
             return (
-                <div className="full_width">
-                    <div className="full_width margin-tb-l hide_overflow">
-                        <StatsCard title='Link' data={(this.state.torrent.name)} />
-                    </div>
+                <div className="full_width flex space-around">
                     <div className="full_width margin-tb-l">
                         <StatsCard title='Ratio' data={(this.state.torrent.ratio).toFixed(2)} />
                     </div>
@@ -462,6 +508,19 @@ export default class Home extends Component {
         }
 
         return null;
+    }
+
+    upload_torrent_file_fields(){
+        return (
+            <div className="card">
+                <div>
+                    <input id="torrent_file" type="file"></input>
+                </div>
+                <div>
+                    <button onClick={this.upload_torrent}>Submit</button>
+                </div>
+            </div>
+        )
     }
 
     append_client_log(log){
@@ -549,13 +608,13 @@ export default class Home extends Component {
         return null;
     }
 
-    left_container(){
+    stats_container(){
         return (
-            <div>
+            <>
                 {this.download_torrent_fields()}
                 {this.upload_torrent_fields()}
+                {/* {this.upload_torrent_file_fields()} */}
                 {this.show_stat_cards()}
-                
                 {
                     this.state.is_streamer
                     ?
@@ -569,6 +628,17 @@ export default class Home extends Component {
                     : null
                 }
                 
+            </>
+        )
+    }
+
+    render_video_player(){
+        return (
+            <div className="video_container card flex col margin-m" style={{
+                display: (this.state.is_loaded || this.state.is_downloading) ? "block" : "none",
+            }}>
+                <video className="video_player" crossOrigin="anonymous" id='player'></video>
+                {this.render_progress()}
             </div>
         )
     }
@@ -576,12 +646,9 @@ export default class Home extends Component {
     render() {
         return (
             <div className="home">
-                <div className="left_container">
-                    {this.left_container()}
-                </div>
-                <div className="video_container card flex col">
-                    <video className="video_player" crossOrigin="anonymous" id='player'></video>
-                    {this.render_progress()}
+                {this.render_video_player()}
+                <div className="stats_container">
+                    {this.stats_container()}
                 </div>
                 <div className="right_container">
                     {this.logs()}

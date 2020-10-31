@@ -5,10 +5,11 @@ const http = require('http').createServer(app);
 const Webtorrent = require('webtorrent-hybrid');
 const Server = require('socket.io');
 const fs = require('fs');
+const Room = require('../models/Room');
 
 const PORT = 8080;
-const links = {};
 const rooms = [];
+let broadcaster;
 
 const announceList = [
     'wss://tracker.openwebtorrent.com',
@@ -47,18 +48,79 @@ io.on('connection', (socket) => {
     io.emit('new_user', "User connected:", socket.id);
     socket.send({
         type: 'init',
-        payload: links,
+        payload: rooms,
     });
 
-    console.log(socket.request.connection.remoteAddress, socket.request.connection.remotePort);
+    /**
+     * WebRTC Signalling Calls
+     */
+    socket.on("webrtc", (payload) => {
+        switch(payload.type){
+            case "broadcaster":
+                console.log('Setting broadcaster', socket.id);
+                broadcaster = socket.id;
+                break;
+            case "watcher":
+                console.log('Adding watcher', socket.id);
+                socket.to(broadcaster).emit("webrtc", {
+                    type: payload.type,
+                    id: socket.id,
+                });
+                break;
+            case "offer":
+                socket.to(payload.id).emit("webrtc", {
+                    type: payload.type,
+                    id: socket.id,
+                    desc: payload.desc,
+                });
+                break;
+            case "candidate":
+                socket.to(payload.id).emit("webrtc", {
+                    type: payload.type,
+                    id: socket.id,
+                    candidate: payload.candidate,
+                });
+                break;
+            case "answer":
+                socket.to(payload.id).emit("webrtc", {
+                    type: payload.type,
+                    id: socket.id,
+                    desc: payload.desc,
+                });
+                break;
+            default:
+                console.log("No action taken", payload);
+        }
+    })
+    socket.on('broadcaster', () => {
+        broadcaster = socket.id;
+    });
 
+    socket.on('watcher', () => {
+        socket.to(broadcaster).emit("watcher", socket.id);
+    });
+
+    socket.on('offer', (id, message) => {
+        socket.to(id).emit("offer", socket.id, message);
+    });
+
+    socket.on("answer", (id, message) => {
+        socket.to(id).emit("answer", socket.id, message);
+    });
+
+    socket.on("candidate", (id, message) => {
+        socket.to(id).emit("candidate", socket.id, message);
+    });
+
+
+    /**
+     * Torrent Calls
+     */
     socket.on('torrent_load', (data) => {
         console.log('room_msg:', data);
+        // torrent_server.add(data.payload[0].magnetURI, torrent_added);
 
-        links[socket.conn.id] = data.payload;
-        torrent_server.add(data.payload[0].magnetURI, torrent_added);
-
-        create_room(data.room, socket);
+        create_room(data, socket);
         console.log('New rooms', rooms);
 
         io.to("waiting_room").emit("room_msg", data);
@@ -75,26 +137,26 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', (reason) => {
+        if(broadcaster !== socket.id){
+            socket.to(broadcaster).emit("disconnectPeer", socket.id);
+        }
+
         console.log("Socket disconnected", reason);
 
-        if(links[socket.conn.id]){
-            const id = links[socket.conn.id][0].magnetURI;
-
-            remove_torrent_data(id)
-            
-            delete links[socket.conn.id];
-            console.log(torrent_server.torrents);
+        for(let i=0; i<rooms.length; i++){
+            if(rooms[i] && rooms[i].owner === socket.conn.id){
+                delete rooms[i];
+                rooms.splice(i, 1);
+                break;
+            }
         }
+
+        console.log('# of rooms:', rooms.length, rooms);
     });
 });
 
-function create_room(name, socket){
-    let new_room = {
-        name,
-        users: [],
-        owner: socket.conn.id,
-    }
-
+function create_room(data, socket){
+    let new_room = new Room(data.name, socket.conn.id, data.payload.torrentFile);
     rooms.push(new_room);
 }
 

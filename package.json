@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "parcel build src/client/index.html",
-    "wp-build": "webpack",
+    "parcel-build": "parcel build src/client/index.html",
+    "build": "webpack",
     "start": "parcel src/client/index.html",
     "run.server": "nodemon src/server/main.js"
   },
@@ -35,7 +35,6 @@
     "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
-    "bittorrent-dht": "^10.0.0",
     "end-of-stream": "^1.4.1",
     "express": "^4.17.1",
     "nodemon": "^2.0.5",
