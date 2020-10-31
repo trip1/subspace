@@ -45,7 +45,7 @@ export default class Broadcaster extends Component {
     }
 
     handle_socket(msg){
-        console.log('Socket msg', msg);
+        // console.log('Socket msg', msg);
         switch(msg.type){
             case "watcher":
                 console.log("Added watcher", msg.id);
@@ -84,9 +84,7 @@ export default class Broadcaster extends Component {
         };
         
         peerConnection
-        .createOffer({
-            type: "video-offer"
-        })
+        .createOffer()
         .then(sdp => peerConnection.setLocalDescription(sdp))
         .then(() => {
             socketapi.emit_webrtc({
@@ -95,10 +93,6 @@ export default class Broadcaster extends Component {
                 desc: peerConnection.localDescription,
             })
         });
-
-        // this.setState({
-        //     peerConnections,
-        // })
     }
 
     on_answer(data){
@@ -108,7 +102,6 @@ export default class Broadcaster extends Component {
 
     on_candidate(data){
         const {id, candidate} = data;
-        console.log(candidate);
 
         if(peerConnections[id]){
             if(candidate){

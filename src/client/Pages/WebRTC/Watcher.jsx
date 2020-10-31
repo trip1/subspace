@@ -21,10 +21,6 @@ export default class Streamer extends Component {
         super();
 
         this.state = {
-            mediaConstrains: {
-                video: { facingMode: "user" },
-                audio: true,
-            },
         }
 
         this.load_video = this.load_video.bind(this);
@@ -42,7 +38,7 @@ export default class Streamer extends Component {
     }
 
     handle_socket(msg){
-        console.log('Socket msg', msg);
+        // console.log('Socket msg', msg);
         switch(msg.type){
             case "offer":
                 console.log("Got Offer", msg);
@@ -83,15 +79,15 @@ export default class Streamer extends Component {
             };
 
             peerConnection.onicecandidate = event => {
-                // if (event.candidate) {
+                if (event.candidate) {
                     socketapi.emit_webrtc({
                         type: "candidate",
                         id,
                         candidate: event.candidate,
                     })
-                // } else {
-                //     console.warn('No event candidate', event);
-                // }
+                } else {
+                    console.warn('No event candidate', event);
+                }
             };
     }
 
