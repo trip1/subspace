@@ -125,6 +125,8 @@ export default class Broadcaster extends Component {
         console.log(file);
         const video_url = URL.createObjectURL(file);
         this.set_video_src(video_url);
+
+        this.socket_connect("broadcaster");
     }
 
     set_video_src(src){
@@ -134,10 +136,6 @@ export default class Broadcaster extends Component {
     render() {
         return (
             <div>
-                <div>
-                    <button onClick={() => this.socket_connect("broadcaster")}>Broadcaster</button>
-                    <button onClick={() => this.socket_connect("watcher")}>Watcher</button>
-                </div>
                 <div>
                     <div>
                         <input id="file_input" onChange={this.load_video} type="file" accept="video/*"></input>

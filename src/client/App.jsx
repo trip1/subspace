@@ -5,19 +5,23 @@ import {
   Route,
 } from "react-router-dom";
 import './App.css';
-import Home from './Pages/Home';
+import Torrent from './Pages/Torrent';
 import Broadcaster from "./Pages/WebRTC/Broadcaster";
 import Watcher from "./Pages/WebRTC/Watcher";
+import Home from './Pages/Home';
 
 export default function App() {
   return (
     <Router>
       <Switch>
-        <Route path="/broadcaster">
+        <Route path="/stream">
           <Broadcaster />
         </Route>
-        <Route path="/watcher">
+        <Route path="/watch">
           <Watcher />
+        </Route>
+        <Route path="/torrent">
+          <Torrent />
         </Route>
         <Route path="/">
           <Home />

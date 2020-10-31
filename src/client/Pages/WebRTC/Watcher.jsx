@@ -111,12 +111,11 @@ export default class Streamer extends Component {
         return (
             <div>
                 <div>
-                    <button onClick={() => this.socket_connect("broadcaster")}>Broadcaster</button>
-                    <button onClick={() => this.socket_connect("watcher")}>Watcher</button>
+                    <button onClick={() => this.socket_connect("watcher")}>Join Room</button>
                 </div>
                 <div>
                     <div>
-                        <video id="video" playsInline muted controls={false} crossOrigin="anonymous"/>
+                        <video id="video" playsInline muted controls crossOrigin="anonymous"/>
                     </div>
                 </div>
             </div>
