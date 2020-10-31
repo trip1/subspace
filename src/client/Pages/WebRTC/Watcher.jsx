@@ -19,7 +19,6 @@ export default class Streamer extends Component {
                 video: { facingMode: "user" },
                 audio: true,
             },
-            
         }
 
         this.load_video = this.load_video.bind(this);
@@ -72,7 +71,7 @@ export default class Streamer extends Component {
 
                     const video = document.getElementById("video");
                     video.srcObject = event.streams[0];
-                    video.play();
+                    // video.play();
                 } catch(err){
                     console.error(err);
                 }
