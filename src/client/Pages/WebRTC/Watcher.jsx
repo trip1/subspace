@@ -7,9 +7,17 @@ const config = {
             urls: [
                 "stun:stun.l.google.com:19302",
                 "stun:stun2.l.google.com:19302",
-                // "stun:stun3.l.google.com:19302",
-                // "stun:stun4.l.google.com:19302",
+            ]
+        },
+        {
+            urls: [
+                "stun:nolife.best",
             ],
+        },
+        { 
+            "urls": "turn:nolife.best",
+            "username": "trip",
+            "credential": "AuiYEMTavdao7T9Q2wS2dABf"
         }
     ]
 }

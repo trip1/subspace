@@ -7,9 +7,17 @@ const config = {
             urls: [
                 "stun:stun.l.google.com:19302",
                 "stun:stun2.l.google.com:19302",
-                // "stun:stun3.l.google.com:19302",
-                // "stun:stun4.l.google.com:19302",
+            ]
+        },
+        {
+            urls: [
+                "stun:nolife.best",
             ],
+        },
+        { 
+            "urls": "turn:nolife.best",
+            "username": "trip",
+            "credential": "AuiYEMTavdao7T9Q2wS2dABf"
         }
     ]
 }
@@ -66,10 +74,23 @@ export default class Broadcaster extends Component {
         const peerConnection = new RTCPeerConnection(config);
         peerConnections[id] = peerConnection;
 
-        const video1 = document.getElementById("video1");
-        const stream = video1.captureStream();
+        const video = document.getElementById("video");
+        const stream = video.captureStream();
 
         stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+        
+        console.log(peerConnection.localDescription);
+        
+        peerConnection
+        .createOffer()
+        .then(sdp => peerConnection.setLocalDescription(sdp))
+        .then(() => {
+            socketapi.emit_webrtc({
+                type: "offer",
+                id,
+                desc: peerConnection.localDescription,
+            })
+        });
 
         peerConnection.onicecandidate = event => {
             if (event.candidate) {
@@ -82,17 +103,6 @@ export default class Broadcaster extends Component {
                 console.log('No event candidate');
             }
         };
-        
-        peerConnection
-        .createOffer()
-        .then(sdp => peerConnection.setLocalDescription(sdp))
-        .then(() => {
-            socketapi.emit_webrtc({
-                type: "offer",
-                id,
-                desc: peerConnection.localDescription,
-            })
-        });
     }
 
     on_answer(data){
@@ -105,6 +115,7 @@ export default class Broadcaster extends Component {
 
         if(peerConnections[id]){
             if(candidate){
+                console.log('Candidate is good', candidate);
                 peerConnections[id].addIceCandidate(new RTCIceCandidate(candidate));
             } else {
                 console.warn("Candidate is null", candidate);
@@ -126,7 +137,7 @@ export default class Broadcaster extends Component {
     }
 
     set_video_src(src){
-        document.getElementById('video1').setAttribute('src', src);
+        document.getElementById('video').setAttribute('src', src);
     }
 
     render() {
@@ -137,7 +148,7 @@ export default class Broadcaster extends Component {
                         <input id="file_input" onChange={this.load_video} type="file" accept="video/*"></input>
                     </div>
                     <div>
-                        <video id="video1" muted controls={true} crossOrigin="anonymous"/>
+                        <video id="video" muted controls={true} crossOrigin="anonymous"/>
                     </div>
                 </div>
             </div>
