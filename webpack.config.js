@@ -7,7 +7,7 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 require("@babel/polyfill");
 
 const config = {
-  entry: ["@babel/polyfill", './src/client/index.js'],
+  entry: ["@babel/polyfill", './src/client/prod.js'],
   mode: 'production',
   target: 'web',
   node: {
