@@ -33,7 +33,7 @@ const config = {
   plugins: [
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
-      template: './src/client/index.html',
+      template: './src/client/prod.html',
       filename: 'index.html',
       inject: 'body',
     }),
