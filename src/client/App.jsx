@@ -24,7 +24,7 @@ export default function App() {
           <Torrent />
         </Route>
         <Route path="/">
-          <Home />
+          <Torrent />
         </Route>
       </Switch>
     </Router>
