@@ -27,7 +27,7 @@ const announceList = [
 /**
  * Setup Torrent server
  */
-const torrent_server = new Webtorrent();
+// const torrent_server = new Webtorrent();
 
 /**
  * Express server setup
@@ -105,7 +105,7 @@ io.on('connection', (socket) => {
      */
     socket.on('torrent_load', (data) => {
         console.log('room_msg:', data);
-        torrent_server.add(data.payload.magnetURI, torrent_added);
+        // torrent_server.add(data.payload.magnetURI, torrent_added);
 
         create_room(data, socket);
         console.log('New rooms', rooms);
@@ -155,31 +155,31 @@ http.listen(PORT, () => {
  * Configure torrent server events
  */
 
-torrent_server.on('torrent', (torrent) => {
-    console.log('Torrent added', torrent.name);
-});
+// torrent_server.on('torrent', (torrent) => {
+//     console.log('Torrent added', torrent.name);
+// });
 
-function torrent_added(torrent){
-    torrent.on('warning', (w) => console.log(`WARN: ${w}.`));
-    torrent.on('error', (err) => console.log(`ERROR: ${err}.`));
-    torrent.on('done', () => {
-        console.log('Torrent download complete');
-    });
-}
+// function torrent_added(torrent){
+//     torrent.on('warning', (w) => console.log(`WARN: ${w}.`));
+//     torrent.on('error', (err) => console.log(`ERROR: ${err}.`));
+//     torrent.on('done', () => {
+//         console.log('Torrent download complete');
+//     });
+// }
 
-function remove_torrent_data(torrentID){
-    try{
-        const t = torrent_server.get(torrentID);
-        if(t){
-            fs.rmdir(t.path, { recursive: true }, (err) => {
-                if(err){
-                    console.error('Failed to remove file', err);
-                }
-            });
-        }
+// function remove_torrent_data(torrentID){
+//     try{
+//         const t = torrent_server.get(torrentID);
+//         if(t){
+//             fs.rmdir(t.path, { recursive: true }, (err) => {
+//                 if(err){
+//                     console.error('Failed to remove file', err);
+//                 }
+//             });
+//         }
 
-        torrent_server.remove(torrentID);
-    } catch(err){
-        console.error("Failed to remove torrent", err);
-    }
-}
+//         torrent_server.remove(torrentID);
+//     } catch(err){
+//         console.error("Failed to remove torrent", err);
+//     }
+// }
